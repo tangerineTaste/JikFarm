@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - JikFarm</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/signup.css">
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-box">
+            <header>
+                <h1><a href="/">JikFarm 🌾</a></h1>
+                <p>JikFarm에 오신 것을 환영합니다. 간편하게 가입하세요.</p>
+            </header>
+            <main>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="username">아이디</label>
+                        <input type="text" id="username" name="username" placeholder="사용하실 아이디를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">이메일</label>
+                        <input type="email" id="email" name="email" placeholder="이메일 주소를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password-confirm">비밀번호 확인</label>
+                        <input type="password" id="password-confirm" name="password-confirm" placeholder="비밀번호를 다시 한번 입력하세요" required>
+                    </div>
+                    <button type="submit" class="btn btn-signup-main">가입하기</button>
+                </form>
+            </main>
+            <footer>
+                <div class="links">
+                    <span>이미 계정이 있으신가요?</span>
+                    <a href="/login.html">로그인</a>
+                </div>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

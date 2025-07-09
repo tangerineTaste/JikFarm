@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JikFarm - 농작물 가격 예측</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="auth-buttons">
+                <a href="/login.html" class="btn btn-login">로그인</a>
+                <a href="/signup.html" class="btn btn-signup">회원가입</a>
+            </div>
+            <h1>직팜AI 🌾</h1>
+            <p>알고 싶은 농작물과 날짜를 선택하시면, 예상 가격을 알려드립니다.</p>
+        </header>
+
+        <div class="prediction-dashboard">
+            <main class="main-content">
+                <div class="selection-area">
+                    <div class="setup-section">
+                        <div class="form-group">
+                            <label for="item-count-select">보고 싶은 개수 선택</label>
+                            <select id="item-count-select" aria-label="보고 싶은 농작물의 개수를 선택하세요">
+                                <option value="1">1개</option>
+                                <option value="2">2개</option>
+                                <option value="3">3개</option>
+                                <option value="4">4개</option>
+                                <option value="5">5개</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="input-container">
+                    </div>
+
+                    <button id="predict-btn">가격 예측하기</button>
+                </div>
+
+                <div class="result-section">
+                    <h2>예측 결과</h2>
+                    <div id="result-container">
+                        <canvas id="price-chart"></canvas>
+                    </div>
+                </div>
+            </main>
+
+            <div id="weather-result-container">
+                <h2>예보된 기상 정보</h2>
+                <canvas id="weather-chart"></canvas>
+            </div>
+        </div>
+
+        <section class="about-jikfarm-section">
+            <h2>JikFarm은 무엇인가요?</h2>
+            <p>직파머스는 인공지능 기술을 활용하여 농산물 가격을 예측하고, 농가와 소비자가 더 나은 결정을 내릴 수 있도록 돕는 혁신적인 플랫폼입니다. 복잡한 시장 데이터를 분석하여 미래 가격 변동을 예측하고, 이를 통해 농가는 안정적인 수익을, 소비자는 합리적인 가격으로 농산물을 구매할 수 있도록 지원합니다.</p>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 농산물 가격 예측 서비스. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

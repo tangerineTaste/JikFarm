@@ -1,0 +1,128 @@
+/* auth.css - 로그인, 회원가입, 아이디/비밀번호 찾기 공통 스타일 */
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 450px; /* 기본 너비 */
+    padding: 20px;
+}
+
+.auth-box {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    animation: fadeInUp 0.6s ease-out forwards;
+    border: 1px solid #ddd; /* 새로운 테두리 추가 */
+}
+
+.auth-box header h1 a {
+    font-size: 1.5em;
+    color: #2E7D32;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.auth-box header p {
+    margin-top: 10px;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.auth-box main {
+    margin-top: 30px;
+    text-align: left;
+}
+
+.auth-box .form-group {
+    margin-bottom: 15px;
+}
+
+.auth-box label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 0.9em;
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.btn-primary-main {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary-main:hover {
+    background-color: #45a049;
+}
+
+.auth-box footer {
+    margin-top: 25px;
+    font-size: 0.85em;
+}
+
+.auth-box .links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-box .links a {
+    color: #555;
+    text-decoration: none;
+}
+
+.auth-box .links a:hover {
+    text-decoration: underline;
+}
+
+/* 아이디 중복 확인 메시지 */
+.check-msg {
+    margin-top: 8px;
+    font-size: 0.85em;
+    display: none; /* 기본적으로 숨김 */
+}
+
+.check-msg.success {
+    color: #2E7D32;
+    display: block;
+}
+
+.check-msg.error {
+    color: #D32F2F;
+    display: block;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

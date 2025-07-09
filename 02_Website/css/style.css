@@ -1,13 +1,20 @@
+.page-wrapper {
+    justify-content: space-between;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 .auth-buttons {
     text-align: right;
-    margin-bottom: 15px;
+    margin: 0 10px;
 }
 
 .btn {
     text-decoration: none;
     padding: 6px 14px;
     border-radius: 5px;
-    font-size: 0.9em;
+    font-size: 20px;
     font-weight: 700;
     transition: all 0.2s ease;
     display: inline-block;
@@ -45,13 +52,14 @@ body {
 }
 
 .container {
-    max-width: 1200px; /* 가로 배치를 위해 전체 컨테이너 너비 확장 */
-    margin: 0 auto;
+    flex-grow: 1;
     background-color: #fff;
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     border: 1px solid #ddd; /* 새로운 테두리 추가 */
+    margin-right
+    : 10px;
 }
 
 .prediction-dashboard {
@@ -286,4 +294,53 @@ footer {
 #weather-result-container h2 {
     font-size: 1.5em;
     margin-bottom: 15px;
+}
+
+.main-layout {
+    display: flex;
+    gap: 10px;
+}
+
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    margin-left: 10px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    border: 1px solid #ddd;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+}
+
+.sidebar h3 {
+    font-size: 1.4em;
+    color: #2E7D32;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #2E7D32;
+    padding-bottom: 10px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 12px 18px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+    background-color: #2E7D32;
+    color: #fff;
 }

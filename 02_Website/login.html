@@ -9,29 +9,30 @@
     <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-box">
-            <header>
-                <h1><a href="/">JikFarm 🌾</a></h1>
-                <p>로그인하여 더 많은 기능을 이용해보세요.</p>
-            </header>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="logo">
+                <a href="./index.html"><img src="img/logo.png" alt="JikFarm Logo"></a>
+            </div>
+            <h2>로그인</h2>
+            <p>로그인하여 더 많은 기능을 이용해보세요.</p>
             <main>
                 <form id="login-form">
-                    <div class="form-group">
+                    <div class="input-group">
                         <label for="username">아이디</label>
                         <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
                     </div>
-                    <div class="form-group">
+                    <div class="input-group">
                         <label for="password">비밀번호</label>
                         <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
                     </div>
-                    <button type="submit" class="btn btn-login-main">로그인</button>
+                    <button type="submit" class="btn btn-primary">로그인</button>
                 </form>
             </main>
             <footer>
                 <div class="links">
-                    <a href="#">비밀번호를 잊으셨나요?</a>
-                    <a href="/signup.html">회원가입</a>
+                    <a href="./find_password.html">비밀번호를 잊으셨나요?</a>
+                    <a href="./signup.html">회원가입</a>
                 </div>
             </footer>
         </div>

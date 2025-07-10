@@ -4,11 +4,11 @@ FROM
    (SELECT
        table_name, table_comment
     FROM
-       information_schema.TABLES WHERE table_schema='jikfarm_db') t1,
+       information_schema.TABLES WHERE table_schema='farmers') t1,
    (SELECT
        table_name, column_name, data_type, column_type, column_key, is_nullable, column_default, extra, column_comment, ordinal_position
     FROM
-       information_schema.COLUMNS WHERE table_schema='jikfarm_db') t2
+       information_schema.COLUMNS WHERE table_schema='farmers') t2
 WHERE
     t1.table_name = t2.table_name
 ORDER BY

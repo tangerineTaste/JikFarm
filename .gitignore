@@ -2,4 +2,4 @@ data/
 etc/
 .gitignore
 99_CodeTest/
-
+__pycache__/

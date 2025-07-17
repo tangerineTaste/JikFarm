@@ -1,14 +1,14 @@
 # 프로젝트명
 > 1st Team Project
 
-- 프로젝트 명 : XXX(간단설명)
-- 인원 : x명
+- 프로젝트 명 : JikFarm(직팜)
+- 인원 : 4명
 - 기간 : 2025.07.07 ~ 2025.07.25
 - 언어 : Python 3.10.9
 - DBMS : MySQL 
-- Python Library : ..
+- Python Library : sklearn, tensorflow, pandas
 - micro Web Framework : flask
-- 프로젝트 소개 : 간단하게 데이터 전처리와 모델을 소개
+- 프로젝트 소개 : 농산물 가격 예측 정보 제겅
 
 <div align=center> 
   <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white"> 

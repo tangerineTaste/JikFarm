@@ -15,6 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
         <option value="배">배</option>
     `;
 
+    const dataOptins = `
+        <option value="7">7일</option>
+        <option value="14">14일</option>
+        <option value="21">21일</option>
+        <option value="28">28일</option>
+        `;
+
     // 오늘 날짜를 가져오는 함수
     function getTodayString() {
         const today = new Date();
@@ -44,6 +51,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <label for="date-input-${i}">기준 날짜 선택</label>
                     <input type="date" id="date-input-${i}" class="date-input" value="${getTodayString()}" aria-label="항목 ${i}의 가격을 예측할 기준 날짜를 선택하세요">
                 </div>
+                <div class="form-group">
+                    <label for="term-input-${i}">기간 선택</label>
+                    <select id="term-input-${i}" class="crop-select" aria-label="항목 ${i}의 가격을 예측할 기간을 선택하세요">
+                        ${dataOptins}
+                    </select>
+                </div>
             `;
             inputContainer.appendChild(inputItem);
         }
@@ -72,17 +85,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const priceDatasets = [];
         const labels = [];
         const baseDateObj = new Date(document.getElementById('date-input-1').value);
+        const term = document.getElementById('term-input-1').value;
         const numHistoricalDays = 7; // 과거 7일
         const numPredictedDays = 5; // 미래 5일
-        const totalDays = numHistoricalDays + numPredictedDays; // 총 12일
+        const totalDays = term*2; 
 
-        // 날짜 라벨 생성 (과거 7일 + 미래 5일 = 총 12일)
-        for (let i = numHistoricalDays - 1; i >= 0; i--) {
+        // 날짜 라벨 생성 (과거 + 미래)
+        for (let i = baseDateObj.getDate()-term; i <baseDateObj.getDate(); i=i+7) {
             const date = new Date(baseDateObj);
-            date.setDate(baseDateObj.getDate() - i);
+            date.setDate(i);
             labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
         }
-        for (let i = 1; i <= numPredictedDays; i++) {
+        for (let i = 0; i <= term; i=i+7) {
             const date = new Date(baseDateObj);
             date.setDate(baseDateObj.getDate() + i);
             labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
@@ -101,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 historicalPriceData.push(Math.floor(Math.random() * (5000 - 1000) + 1000));
             }
 
-            // 미래 5일간의 임의 예측 가격 데이터 생성
+            // 미래 term 기간의 임의 예측 가격 데이터 생성
             const predictedPriceData = [];
             const lastHistoricalPrice = historicalPriceData[historicalPriceData.length - 1];
             for (let j = 0; j < numPredictedDays; j++) {
@@ -160,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     title: {
                         display: true,
-                        text: '농작물 가격 변동 그래프 (과거 7일 + 예측 5일)'
+                        text: '농작물 가격 변동 그래프 (과거 '+term+'일 + 예측 '+term+'일)'
                     }
                 },
                 scales: {

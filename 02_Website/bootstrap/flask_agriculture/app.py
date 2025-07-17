@@ -23,20 +23,30 @@ def home():
 def about():
     return render_template('about.html')
 
-@app.route('/services')
-@app.route('/services.html')
-def services():
-    return render_template('services.html')
+@app.route('/chart')
+@app.route('/chart.html')
+def chart():
+    return render_template('chart.html')
 
-@app.route('/blog')
-@app.route('/blog.html')
-def blog():
-    return render_template('blog.html')
+@app.route('/roadmap')
+@app.route('/roadmap.html')
+def roadmap():
+    return render_template('roadmap.html')
 
-@app.route('/testimonials')
-@app.route('/testimonials.html')
-def testimonials():
-    return render_template('testimonials.html')
+@app.route('/login')
+@app.route('/login.html')
+def login():
+    return render_template('login.html')
+
+@app.route('/signup')
+@app.route('/signup.html')
+def signup():
+    return render_template('signup.html')
+
+@app.route('/find_password')
+@app.route('/find_password.html')
+def find_password():
+    return render_template('findPassword.html')
 
 
 if __name__ == '__main__':

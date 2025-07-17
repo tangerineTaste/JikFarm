@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Testimonials - AgriCulture Bootstrap Template</title>
+  <title>Services - AgriCulture Bootstrap Template</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -23,8 +23,7 @@
   <link href="static/assets/vendor/aos/aos.css" rel="stylesheet">
   <link href="static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
   <link href="static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="static/css/auth.css" rel="stylesheet">
-  <link href="static/css/login.css" rel="stylesheet">
+  <link href="static/css/chart.css" rel="stylesheet">
 
   <!-- Main CSS File -->
   <link href="static/assets/css/main.css" rel="stylesheet">
@@ -38,7 +37,7 @@
   ======================================================== -->
 </head>
 
-<body class="testimonials-page">
+<body class="services-page">
 
   <header id="header" class="header d-flex align-items-center position-relative">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
@@ -52,10 +51,10 @@
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/" >메인 홈</a></li>
-          <li><a href="about">팀원 소개</a></li>
-          <li><a href="services">가격 예측</a></li>
-          <li><a href="blog">로드맵</a></li>
-          <li><a href="testimonials" class="active">로그인 / 회원가입</a></li>
+          <li><a href="about" >팀원 소개</a></li>
+          <li><a href="chart">가격 예측</a></li>
+          <li><a href="roadmap">로드맵</a></li>
+          <li><a href="login">로그인 / 회원가입</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -68,49 +67,62 @@
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(static/assets/img/page-title-bg.webp);">
       <div class="container position-relative">
-        <h1>로그인 / 회원가입</h1>
-        <p>
-          JikFarm에 오신 것을 환영합니다.
-        </p>
+        <h1>가격 예측</h1>
+        <p>Predict</p>
       </div>
     </div><!-- End Page Title -->
 
-    <div class="auth-container">
-        <div class="auth-box">
-            <div class="logo">
-                <a href="/"><img src="static/assets/img/logo.png" alt="JikFarm Logo"></a>
+    <!-- Services Section -->
+    <section id="services" class="services section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <p>농작물 가격을 예측하고 기상 정보를 확인하세요</p>
+      </div><!-- End Section Title -->
+
+      <!-- 주 컨텐츠 -->
+      <div class="prediction-dashboard">
+        <div class="selection-area">
+            <div class="setup-section">
+                <div class="form-group">
+                    <label for="item-count-select">보고 싶은 개수 선택</label>
+                    <select id="item-count-select" aria-label="보고 싶은 농작물의 개수를 선택하세요">
+                        <option value="1">1개</option>
+                        <option value="2">2개</option>
+                        <option value="3">3개</option>
+                        <option value="4">4개</option>
+                        <option value="5">5개</option>
+                    </select>
+                </div>
             </div>
-            <h2>로그인</h2>
-            <p>로그인하여 더 많은 기능을 이용해보세요.</p>
-            <form id="login-form">
-                <div class="input-group">
-                    <label for="username">아이디</label>
-                    <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
-                </div>
-                <div class="input-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
-                </div>
-                <button type="submit" class="btn btn-primary">로그인</button>
-            </form>
-            <div class="links">
-                <a href="/find_password">비밀번호를 잊으셨나요?</a>
-                <a href="/signup">회원가입</a>
+
+            <div id="input-container">
+            </div>
+
+            <button id="predict-btn">가격 예측하기</button>
+        </div>
+
+        <div class="result-section">
+            <h2>예측 결과</h2>
+            <div id="result-container">
+                <canvas id="price-chart"></canvas>
             </div>
         </div>
-    </div>
-
-  </main>
+                
+      </div>
+      <!-- 주 컨텐츠 끝 -->
+    </section>
+    <!-- /Services Section -->
 
   </main>
 
   <footer id="footer" class="footer dark-background">
 
     <div class="footer-top">
-      <div class="container-fluid">
+      <div class="container">
         <div class="row gy-4">
           <div class="col-lg-4 col-md-6 footer-about">
-            <a href="/" class="logo d-flex align-items-center">
+            <a href="index.html" class="logo d-flex align-items-center">
               <span class="sitename">AgriCulture</span>
             </a>
             <div class="footer-contact pt-3">
@@ -170,7 +182,7 @@
     </div>
 
     <div class="copyright text-center">
-      <div class="container-fluid d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
+      <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
 
         <div class="d-flex flex-column align-items-center align-items-lg-start">
           <div>
@@ -209,9 +221,11 @@
   <script src="static/assets/vendor/aos/aos.js"></script>
   <script src="static/assets/vendor/swiper/swiper-bundle.min.js"></script>
   <script src="static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Main JS File -->
   <script src="static/assets/js/main.js"></script>
+  <script src="static/js/chart_main.js"></script>
 
 </body>
 

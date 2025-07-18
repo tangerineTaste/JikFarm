@@ -75,42 +75,102 @@
     <!-- Services Section -->
     <section id="services" class="services section">
 
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <p>농작물 가격을 예측하고 기상 정보를 확인하세요</p>
-      </div><!-- End Section Title -->
-
       <!-- 주 컨텐츠 -->
       <div class="prediction-dashboard">
         <div class="selection-area">
-            <div class="setup-section">
+            <div class="tab-buttons">
+                <button class="tab active" id="tab-trend">트렌드 분석</button>
+                <button class="tab" id="tab-ai">AI예측</button>
+            </div>
+            <div id="trend-analysis-section" class="setup-section" style="display: none;">
                 <div class="form-group">
-                    <label for="item-count-select">보고 싶은 개수 선택</label>
-                    <select id="item-count-select" aria-label="보고 싶은 농작물의 개수를 선택하세요">
-                        <option value="1">1개</option>
-                        <option value="2">2개</option>
-                        <option value="3">3개</option>
-                        <option value="4">4개</option>
-                        <option value="5">5개</option>
-                    </select>
+                    <div class="filter-box">
+                        <div>
+                            <label>구분</label>
+                            <div class="tab-buttons">
+                                <button class="tab active" id="btn-weekly">주간</button>
+                                <button class="tab" id="btn-daily">일간</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>기간:</label>
+                            <input type="date" id="start-date">
+                            <span>~</span>
+                            <input type="date" id="end-date">
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div>
+                            <label>품목:</label>
+                            <select id="crop-select">
+                                <option value="배추">배추</option>
+                                <option value="무">무</option>
+                                <option value="고추">고추</option>
+                                <option value="마늘">마늘</option>
+                                <option value="양파" selected>양파</option>
+                                <option value="사과">사과</option>
+                                <option value="배">배</option>
+                            </select>
+                            <label>품종:</label>
+                            <select id="variety-select"><option>전체</option></select>
+                            <label>등급:</label>
+                            <select id="grade-select"><option>전체</option></select>
+                            <label>산지:</label>
+                            <select id="origin-select"><option>전체</option></select>
+                        </div>
+                        <button class="query-button">조회</button>
+                    </div>
                 </div>
             </div>
-
-            <div id="input-container">
+            <div id="ai-prediction-section" class="setup-section">
+                 <div class="form-group">
+                    <div class="filter-box">
+                        <div>
+                            <label for="ai-crop-select">품목:</label>
+                            <select id="ai-crop-select">
+                                <option value="배추">배추</option>
+                                <option value="무">무</option>
+                                <option value="고추">고추</option>
+                                <option value="마늘">마늘</option>
+                                <option value="양파" selected>양파</option>
+                                <option value="사과">사과</option>
+                                <option value="배">배</option>
+                            </select>
+                             <label for="ai-base-date">기준일:</label>
+                            <input type="date" id="ai-base-date">
+                            <label for="ai-term-select">예측 기간:</label>
+                            <select id="ai-term-select">
+                                <option value="7">1주일</option>
+                                <option value="14">2주일</option>
+                                <option value="30">1개월</option>
+                            </select>
+                        </div>
+                        <button class="query-button" id="ai-predict-btn">예측하기</button>
+                    </div>
+                </div>
             </div>
-
-            <button id="predict-btn">가격 예측하기</button>
-        </div>
 
         <div class="result-section">
             <h2>예측 결과</h2>
             <div id="result-container">
                 <canvas id="price-chart"></canvas>
             </div>
+            <div class="table-responsive mt-4">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">기간</th>
+                            <th scope="col">가격 (원)</th>
+                            <th scope="col">거래량</th>
+                        </tr>
+                    </thead>
+                    <tbody id="price-data-table">
+                        <!-- Data will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-                
       </div>
-
 
       <!-- 주 컨텐츠 끝 -->
     </section>

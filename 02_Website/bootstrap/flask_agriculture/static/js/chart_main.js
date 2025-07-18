@@ -1,206 +1,247 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const itemCountSelect = document.getElementById('item-count-select');
-    const inputContainer = document.getElementById('input-container');
-    const predictBtn = document.getElementById('predict-btn');
+    // Common elements
     const priceCtx = document.getElementById('price-chart').getContext('2d');
-    let priceChart = null; // 가격 차트 인스턴스를 저장할 변수
+    let priceChart = null;
 
-    const cropOptions = `
-        <option value="배추">배추</option>
-        <option value="무">무</option>
-        <option value="고추">고추</option>
-        <option value="마늘">마늘</option>
-        <option value="양파">양파</option>
-        <option value="사과">사과</option>
-        <option value="배">배</option>
-    `;
+    // Tab elements
+    const tabTrend = document.getElementById('tab-trend');
+    const tabAi = document.getElementById('tab-ai');
+    const trendSection = document.getElementById('trend-analysis-section');
+    const aiSection = document.getElementById('ai-prediction-section');
 
-    const dataOptins = `
-        <option value="7">7일</option>
-        <option value="14">14일</option>
-        <option value="21">21일</option>
-        <option value="28">28일</option>
-        `;
+    // Trend Analysis elements
+    const trendQueryBtn = document.querySelector('#trend-analysis-section .query-button');
+    const cropSelect = document.getElementById('crop-select');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const btnWeekly = document.getElementById('btn-weekly');
+    const btnDaily = document.getElementById('btn-daily');
+    let trendView = 'weekly';
 
-    // 오늘 날짜를 가져오는 함수
-    function getTodayString() {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    }
+    // AI Prediction elements
+    const aiPredictBtn = document.getElementById('ai-predict-btn');
+    const aiCropSelect = document.getElementById('ai-crop-select');
+    const aiBaseDateInput = document.getElementById('ai-base-date');
+    const aiTermSelect = document.getElementById('ai-term-select');
 
-    // 입력 필드를 생성하는 함수
-    function createInputFields(count) {
-        inputContainer.innerHTML = ''; // 기존 필드 초기화
-        for (let i = 1; i <= count; i++) {
-            const inputItem = document.createElement('div');
-            inputItem.className = 'input-item';
-            inputItem.style.animationDelay = `${(i - 1) * 0.1}s`;
+    // Set default dates
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    startDateInput.valueAsDate = oneMonthAgo;
+    endDateInput.valueAsDate = today;
+    aiBaseDateInput.valueAsDate = today;
 
-            inputItem.innerHTML = `
-                <h3>항목 ${i}</h3>
-                <div class="form-group">
-                    <label for="crop-select-${i}">농작물 선택</label>
-                    <select id="crop-select-${i}" class="crop-select" aria-label="항목 ${i}의 농작물 종류를 선택하세요">
-                        ${cropOptions}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="date-input-${i}">기준 날짜 선택</label>
-                    <input type="date" id="date-input-${i}" class="date-input" value="${getTodayString()}" aria-label="항목 ${i}의 가격을 예측할 기준 날짜를 선택하세요">
-                </div>
-                <div class="form-group">
-                    <label for="term-input-${i}">기간 선택</label>
-                    <select id="term-input-${i}" class="crop-select" aria-label="항목 ${i}의 가격을 예측할 기간을 선택하세요">
-                        ${dataOptins}
-                    </select>
-                </div>
-            `;
-            inputContainer.appendChild(inputItem);
+    // --- Tab Switching Logic ---
+    function switchTab(tab) {
+        if (tab === 'trend') {
+            tabTrend.classList.add('active');
+            tabAi.classList.remove('active');
+            trendSection.style.display = 'block';
+            aiSection.style.display = 'none';
+            renderTrendChart();
+        } else {
+            tabAi.classList.add('active');
+            tabTrend.classList.remove('active');
+            aiSection.style.display = 'block';
+            trendSection.style.display = 'none';
+            renderAiPredictionChart();
         }
     }
 
-    // 차트를 렌더링하는 함수
-    function renderCharts() {
-        const count = itemCountSelect.value;
-        let allValid = true;
+    tabTrend.addEventListener('click', () => switchTab('trend'));
+    tabAi.addEventListener('click', () => switchTab('ai'));
 
-        // 1. 유효성 검사
-        for (let i = 1; i <= count; i++) {
-            const dateInput = document.getElementById(`date-input-${i}`);
-            if (!dateInput.value) {
-                allValid = false;
-                break;
+    // --- Trend Analysis Logic ---
+    function renderTrendChart() {
+        setActiveTrendButton(); // Ensure button active state is set
+        const selectedCrop = cropSelect.value;
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        let labels = [];
+        let priceData = [];
+
+        if (trendView === 'weekly') {
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                const weekNumber = Math.ceil(currentDate.getDate() / 7);
+                const month = currentDate.getMonth() + 1;
+                labels.push(`${month}월 ${weekNumber}주차`);
+                priceData.push(3000 + Math.random() * 500);
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+        } else { // Daily view
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                labels.push(currentDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }));
+                priceData.push(3000 + Math.random() * 500);
+                currentDate.setDate(currentDate.getDate() + 1);
             }
         }
 
-        if (!allValid) {
-            alert('모든 항목의 날짜를 선택해주세요!');
-            return;
+        const volumeData = priceData.map(() => Math.random() * 5000 + 10000);
+        const chartTitle = `${selectedCrop} 가격 및 거래량 (${trendView === 'weekly' ? '주간' : '일간'})`;
+        drawChart(labels, priceData, volumeData, selectedCrop, chartTitle);
+        updateDataTable(labels, priceData, volumeData);
+    }
+
+    function setActiveTrendButton() {
+        if (trendView === 'weekly') {
+            btnWeekly.classList.add('active');
+            btnDaily.classList.remove('active');
+        } else {
+            btnDaily.classList.add('active');
+            btnWeekly.classList.remove('active');
+        }
+    }
+
+    btnWeekly.addEventListener('click', () => {
+        trendView = 'weekly';
+        setActiveTrendButton();
+        renderTrendChart();
+    });
+    btnDaily.addEventListener('click', () => {
+        trendView = 'daily';
+        setActiveTrendButton();
+        renderTrendChart();
+    });
+    trendQueryBtn.addEventListener('click', renderTrendChart);
+
+    // --- AI Prediction Logic ---
+    function renderAiPredictionChart() {
+        const selectedCrop = aiCropSelect.value;
+        const baseDate = new Date(aiBaseDateInput.value);
+        const termDays = parseInt(aiTermSelect.value, 10);
+
+        const labels = [];
+        const historicalData = [];
+        const predictionData = [];
+
+        // Generate historical labels and data (e.g., 1 month before base date)
+        for (let i = 30; i > 0; i--) {
+            const date = new Date(baseDate);
+            date.setDate(baseDate.getDate() - i);
+            labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
+            historicalData.push(3000 + Math.random() * 500);
+        }
+
+        // Generate prediction labels and data
+        for (let i = 0; i < termDays; i++) {
+            const date = new Date(baseDate);
+            date.setDate(baseDate.getDate() + i);
+            labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
+            predictionData.push(null); // Placeholder for prediction
         }
         
-        // 2. 데이터 준비 (가격 예측 그래프)
-        const priceDatasets = [];
-        const labels = [];
-        const baseDateObj = new Date(document.getElementById('date-input-1').value);
-        const term = document.getElementById('term-input-1').value;
-        const numHistoricalDays = 7; // 과거 7일
-        const numPredictedDays = 5; // 미래 5일
-        const totalDays = term*2; 
-
-        // 날짜 라벨 생성 (과거 + 미래)
-        for (let i = baseDateObj.getDate()-term; i <baseDateObj.getDate(); i=i+7) {
-            const date = new Date(baseDateObj);
-            date.setDate(i);
-            labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
-        }
-        for (let i = 0; i <= term; i=i+7) {
-            const date = new Date(baseDateObj);
-            date.setDate(baseDateObj.getDate() + i);
-            labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+        const fullPriceData = historicalData.concat(predictionData);
+        // Create a prediction line that starts from the last historical point
+        const predictionLine = new Array(historicalData.length - 1).fill(null);
+        let lastHistoricalValue = historicalData[historicalData.length - 1];
+        for(let i = 0; i < termDays + 1; i++) {
+             predictionLine.push(lastHistoricalValue + (Math.random() - 0.5) * 200 * i);
         }
 
-        const priceColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
-        const predictedColor = '#8A2BE2'; // 예측 데이터에 사용할 다른 색상 (보라색 계열)
+        const volumeData = fullPriceData.map(() => Math.random() * 5000 + 10000);
+        const chartTitle = `${selectedCrop} AI 예측 결과`;
+        drawAiChart(labels, fullPriceData, predictionLine, volumeData, selectedCrop, chartTitle);
+        updateDataTable(labels, fullPriceData, volumeData);
+    }
 
-        for (let i = 1; i <= count; i++) {
-            const cropSelect = document.getElementById(`crop-select-${i}`);
-            const selectedCrop = cropSelect.value;
-            
-            // 과거 7일간의 임의 가격 데이터 생성
-            const historicalPriceData = [];
-            for (let j = 0; j < numHistoricalDays; j++) {
-                historicalPriceData.push(Math.floor(Math.random() * (5000 - 1000) + 1000));
-            }
+    aiPredictBtn.addEventListener('click', renderAiPredictionChart);
 
-            // 미래 term 기간의 임의 예측 가격 데이터 생성
-            const predictedPriceData = [];
-            const lastHistoricalPrice = historicalPriceData[historicalPriceData.length - 1];
-            for (let j = 0; j < numPredictedDays; j++) {
-                // 마지막 과거 가격을 기준으로 약간의 변동을 주어 예측 가격 생성
-                predictedPriceData.push(Math.floor(lastHistoricalPrice + (Math.random() * 400 - 200))); // +/- 200원 변동
-            }
-
-            // 과거 데이터와 예측 데이터를 합침
-            const combinedData = historicalPriceData.concat(predictedPriceData);
-
-            priceDatasets.push({
-                label: `${selectedCrop} 가격`,
-                data: combinedData,
-                borderColor: priceColors[(i - 1) % priceColors.length],
-                backgroundColor: priceColors[(i - 1) % priceColors.length] + '33', // 투명도 20%
-                fill: false,
-                tension: 0.2,
-                segment: {
-                    borderColor: ctx => {
-                        // 예측 부분만 다른 색상 적용
-                        const dataIndex = ctx.p0DataIndex; // 현재 세그먼트의 시작점 인덱스
-                        if (dataIndex >= numHistoricalDays - 1) { // 마지막 과거 데이터 포인트부터 예측 시작
-                            return predictedColor; 
-                        }
-                        return priceColors[(i - 1) % priceColors.length]; // 과거 데이터 색상
-                    },
-                    borderDash: ctx => {
-                        // 예측 부분만 점선 적용
-                        const dataIndex = ctx.p0DataIndex;
-                        if (dataIndex >= numHistoricalDays - 1) {
-                            return [5, 5]; // 점선
-                        }
-                        return []; // 실선
-                    }
+    // --- Generic Chart Drawing Functions ---
+    function getChartOptions(chartTitle) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: chartTitle
                 }
-            });
-        }
-
-        // 3. 가격 차트 생성/업데이트
-        if (priceChart) {
-            priceChart.destroy(); // 기존 차트가 있으면 제거
-        }
-
-        priceChart = new Chart(priceCtx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: priceDatasets
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
+            scales: {
+                y: { // Primary Y-axis (Price)
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('ko-KR').format(value) + ' 원';
+                        }
                     },
                     title: {
                         display: true,
-                        text: '농작물 가격 변동 그래프 (과거 '+term+'일 + 예측 '+term+'일)'
+                        text: '가격 (원)'
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('ko-KR').format(value) + ' 원';
-                            }
+                y1: { // Secondary Y-axis (Volume)
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false, // only draw grid for primary axis
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('ko-KR').format(value);
                         }
+                    },
+                    title: {
+                        display: true,
+                        text: '거래량'
                     }
                 }
             }
+        };
+    }
+
+    function drawChart(labels, priceData, volumeData, title, chartTitle) {
+        if (priceChart) priceChart.destroy();
+        priceChart = new Chart(priceCtx, {
+            data: {
+                labels: labels,
+                datasets: [
+                    { type: 'line', label: `${title} 가격`, data: priceData, yAxisID: 'y', borderColor: '#28a745', backgroundColor: 'rgba(40, 167, 69, 0.1)', tension: 0.4 },
+                    { type: 'bar', label: `${title} 거래량`, data: volumeData, yAxisID: 'y1', backgroundColor: 'rgba(153, 102, 255, 0.2)' }
+                ]
+            },
+            options: getChartOptions(chartTitle)
+        });
+    }
+    
+    function drawAiChart(labels, priceData, predictionLine, volumeData, title, chartTitle) {
+        if (priceChart) priceChart.destroy();
+        priceChart = new Chart(priceCtx, {
+            data: {
+                labels: labels,
+                datasets: [
+                    { type: 'line', label: `${title} 과거 가격`, data: priceData, yAxisID: 'y', borderColor: '#28a745', fill: false, tension: 0.4 },
+                    { type: 'line', label: `${title} 예측 가격`, data: predictionLine, yAxisID: 'y', borderColor: '#8A2BE2', borderDash: [5, 5], fill: false, tension: 0.4 },
+                    { type: 'bar', label: `${title} 거래량`, data: volumeData, yAxisID: 'y1', backgroundColor: 'rgba(153, 102, 255, 0.2)' }
+                ]
+            },
+            options: getChartOptions(chartTitle)
         });
     }
 
-    // 개수 선택 시 입력 필드 동적 생성
-    itemCountSelect.addEventListener('change', (e) => {
-        createInputFields(e.target.value);
-        renderCharts(); // 입력 필드 변경 시 차트도 업데이트
-    });
+    function updateDataTable(labels, priceData, volumeData) {
+        const tableBody = document.getElementById('price-data-table');
+        tableBody.innerHTML = '';
+        labels.forEach((label, index) => {
+            const row = document.createElement('tr');
+            const price = priceData[index] ? new Intl.NumberFormat('ko-KR').format(priceData[index].toFixed(0)) : 'N/A';
+            const volume = volumeData[index] ? new Intl.NumberFormat('ko-KR').format(volumeData[index].toFixed(0)) : 'N/A';
+            row.innerHTML = `<td>${label}</td><td>${price}</td><td>${volume}</td>`;
+            tableBody.appendChild(row);
+        });
+    }
 
-    // 예측 버튼 클릭 이벤트
-    predictBtn.addEventListener('click', renderCharts);
-
-    // 페이지 로드 시 기본값으로 필드 생성 및 차트 렌더링
-    createInputFields(itemCountSelect.value);
-    renderCharts();
+    // Initial Load
+    switchTab('trend');
 });

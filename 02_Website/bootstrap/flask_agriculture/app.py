@@ -48,6 +48,5 @@ def signup():
 def find_password():
     return render_template('findPassword.html')
 
-
 if __name__ == '__main__':
     app.run(debug=True)

@@ -54,12 +54,12 @@ CREATE TABLE `factor_external` (
 
 -- 5. 원본 거래 데이터 테이블 (산지: plor_cd 기준)
 CREATE TABLE `fact_trade` (
-  `trade_date` date,
+  `trd_clcln_ymd` date,
   `crop_full_code` varchar(15),
-  `plor_cd` varchar(20),
+  `j_sanji_cd` varchar(20),
   `grade_label` varchar(5),
-  `total_qty` int,
-  `total_price` int,
-  PRIMARY KEY (`trade_date`, `crop_full_code`, `plor_cd`),
+  `unit_tot_qty` float,
+  `totprc` float,
+  PRIMARY KEY (`trd_clcln_ymd`, `crop_full_code`, `j_sanji_cd`),
   FOREIGN KEY (`crop_full_code`) REFERENCES `master_crop_variety` (`full_code`)
-);
+  );

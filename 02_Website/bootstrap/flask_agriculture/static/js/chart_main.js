@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // AI예측 elements
     const aiPredictBtn = document.getElementById('ai-predict-btn');
     const aiCropSelect = document.getElementById('ai-crop-select');
-    const aiBaseDateInput = document.getElementById('ai-base-date');
+    
     const aiTermSelect = document.getElementById('ai-term-select');
 
     // 기본날짜 설정
@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     oneMonthAgo.setMonth(today.getMonth() - 1);
     startDateInput.valueAsDate = oneMonthAgo;
     endDateInput.valueAsDate = today;
-    aiBaseDateInput.valueAsDate = today;
 
     // 탭 전환 로직
     function switchTab(tab) {
@@ -111,15 +110,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // AI예측 로직
     function renderAiPredictionChart() {
         const selectedCrop = aiCropSelect.value;
-        const baseDate = new Date(aiBaseDateInput.value);
+        const baseDate = new Date(); // Always start from today
         const termDays = parseInt(aiTermSelect.value, 10);
 
         const labels = [];
         const historicalData = [];
         const predictionData = [];
 
-        // 오늘 날짜로부터 30일 이전까지의 무작위 데이터 생성
-        for (let i = 30; i > 0; i--) {
+        // 오늘 날짜로부터 3일 이전까지의 무작위 데이터 생성
+        for (let i = 3; i > 0; i--) {
             const date = new Date(baseDate);
             date.setDate(baseDate.getDate() - i);
             labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));

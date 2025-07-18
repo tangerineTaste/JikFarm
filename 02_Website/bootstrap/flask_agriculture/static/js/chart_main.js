@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const trendSection = document.getElementById('trend-analysis-section');
     const aiSection = document.getElementById('ai-prediction-section');
 
-    // Trend Analysis elements
+    // 트렌드 분석 elements
     const trendQueryBtn = document.querySelector('#trend-analysis-section .query-button');
     const cropSelect = document.getElementById('crop-select');
     const startDateInput = document.getElementById('start-date');
@@ -18,13 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDaily = document.getElementById('btn-daily');
     let trendView = 'weekly';
 
-    // AI Prediction elements
+    // AI예측 elements
     const aiPredictBtn = document.getElementById('ai-predict-btn');
     const aiCropSelect = document.getElementById('ai-crop-select');
     const aiBaseDateInput = document.getElementById('ai-base-date');
     const aiTermSelect = document.getElementById('ai-term-select');
 
-    // Set default dates
+    // 기본날짜 설정
     const today = new Date();
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(today.getMonth() - 1);
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     endDateInput.valueAsDate = today;
     aiBaseDateInput.valueAsDate = today;
 
-    // --- Tab Switching Logic ---
+    // 탭 전환 로직
     function switchTab(tab) {
         if (tab === 'trend') {
             tabTrend.classList.add('active');
@@ -52,9 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
     tabTrend.addEventListener('click', () => switchTab('trend'));
     tabAi.addEventListener('click', () => switchTab('ai'));
 
-    // --- Trend Analysis Logic ---
+    // 트렌드 분석 로직
     function renderTrendChart() {
-        setActiveTrendButton(); // Ensure button active state is set
+        setActiveTrendButton(); // 트렌드 분석탭이 기본적으로 활성화
         const selectedCrop = cropSelect.value;
         const startDate = new Date(startDateInput.value);
         const endDate = new Date(endDateInput.value);
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 priceData.push(3000 + Math.random() * 500);
                 currentDate.setDate(currentDate.getDate() + 7);
             }
-        } else { // Daily view
+        } else { // 일간 보기
             let currentDate = new Date(startDate);
             while (currentDate <= endDate) {
                 labels.push(currentDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }));
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     trendQueryBtn.addEventListener('click', renderTrendChart);
 
-    // --- AI Prediction Logic ---
+    // AI예측 로직
     function renderAiPredictionChart() {
         const selectedCrop = aiCropSelect.value;
         const baseDate = new Date(aiBaseDateInput.value);
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const historicalData = [];
         const predictionData = [];
 
-        // Generate historical labels and data (e.g., 1 month before base date)
+        // 오늘 날짜로부터 30일 이전까지의 무작위 데이터 생성
         for (let i = 30; i > 0; i--) {
             const date = new Date(baseDate);
             date.setDate(baseDate.getDate() - i);
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             historicalData.push(3000 + Math.random() * 500);
         }
 
-        // Generate prediction labels and data
+        // 예측 데이터 생성
         for (let i = 0; i < termDays; i++) {
             const date = new Date(baseDate);
             date.setDate(baseDate.getDate() + i);
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const fullPriceData = historicalData.concat(predictionData);
-        // Create a prediction line that starts from the last historical point
+        // 예측 데이터의 시작점을 위에서 생성한 데이터로 만들어준다.
         const predictionLine = new Array(historicalData.length - 1).fill(null);
         let lastHistoricalValue = historicalData[historicalData.length - 1];
         for(let i = 0; i < termDays + 1; i++) {
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     aiPredictBtn.addEventListener('click', renderAiPredictionChart);
 
-    // --- Generic Chart Drawing Functions ---
+    // 차트 그리기 함수
     function getChartOptions(chartTitle) {
         return {
             responsive: true,
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             },
             scales: {
-                y: { // Primary Y-axis (Price)
+                y: { // 주간 가격 차트의 주요 Y축
                     type: 'linear',
                     display: true,
                     position: 'left',
@@ -180,12 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         text: '가격 (원)'
                     }
                 },
-                y1: { // Secondary Y-axis (Volume)
+                y1: { // 주간 거래량 차트의 주요 Y축
                     type: 'linear',
                     display: true,
                     position: 'right',
                     grid: {
-                        drawOnChartArea: false, // only draw grid for primary axis
+                        drawOnChartArea: false, // 주요 축의 그리드만 그리기
                     },
                     ticks: {
                         callback: function(value) {

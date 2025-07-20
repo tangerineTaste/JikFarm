@@ -2,3 +2,4 @@ data/
 etc/
 .gitignore
 __pycache__/
+.env

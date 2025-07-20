@@ -11,7 +11,12 @@
           <li><a href="about" >팀원 소개</a></li>
           <li><a href="chart">가격 예측</a></li>
           <li><a href="roadmap">로드맵</a></li>
-          <li><a href="login">로그인 / 회원가입</a></li>
+          {% if 'member_id' in session %}
+          <li><a href="/mypage">마이페이지</a></li>
+          <li><a href="/logout">로그아웃</a></li>
+          {% else %}
+          <li><a href="/login">로그인 / 회원가입</a></li>
+          {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>

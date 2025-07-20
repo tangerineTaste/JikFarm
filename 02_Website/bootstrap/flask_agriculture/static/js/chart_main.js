@@ -10,26 +10,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const aiSection = document.getElementById('ai-prediction-section');
 
     // 트렌드 분석 elements
-    const trendQueryBtn = document.querySelector('#trend-analysis-section .query-button');
+    const trendQueryBtn = document.getElementById('trend-query-btn');
     const cropSelect = document.getElementById('crop-select');
+    const varietySelect = document.getElementById('variety-select');
+    const gradeSelect = document.getElementById('grade-select');
+    const originSelect = document.getElementById('origin-select');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     const btnWeekly = document.getElementById('btn-weekly');
     const btnDaily = document.getElementById('btn-daily');
-    let trendView = 'weekly';
+    let trendView = 'weekly'; // Default to weekly
 
     // AI예측 elements
     const aiPredictBtn = document.getElementById('ai-predict-btn');
     const aiCropSelect = document.getElementById('ai-crop-select');
-    
     const aiTermSelect = document.getElementById('ai-term-select');
 
-    // 기본날짜 설정
-    const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
-    startDateInput.valueAsDate = oneMonthAgo;
-    endDateInput.valueAsDate = today;
+    // 날짜(YYYY-MM-DD)를 주차(YYYYWW)로 변환하는 헬퍼 함수
+    function getWeekNumberFromDate(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const firstDayOfYear = new Date(year, 0, 1);
+        const days = Math.floor((date - firstDayOfYear) / (24 * 60 * 60 * 1000));
+        // 간단한 주차 계산 (ISO 8601과 다를 수 있음, DB의 weekno 정의에 따라 조정 필요)
+        const weekNumber = Math.ceil((days + firstDayOfYear.getDay() + 1) / 7);
+        return `${year}${String(weekNumber).padStart(2, '0')}`;
+    }
 
     // 탭 전환 로직
     function switchTab(tab) {
@@ -38,51 +44,135 @@ document.addEventListener('DOMContentLoaded', function() {
             tabAi.classList.remove('active');
             trendSection.style.display = 'block';
             aiSection.style.display = 'none';
-            renderTrendChart();
+            renderTrendChart(); // 탭 전환 시 차트 다시 그리기
         } else {
             tabAi.classList.add('active');
             tabTrend.classList.remove('active');
             aiSection.style.display = 'block';
             trendSection.style.display = 'none';
-            renderAiPredictionChart();
+            renderAiPredictionChart(); // 탭 전환 시 차트 다시 그리기
         }
     }
 
     tabTrend.addEventListener('click', () => switchTab('trend'));
     tabAi.addEventListener('click', () => switchTab('ai'));
 
-    // 트렌드 분석 로직
-    function renderTrendChart() {
-        setActiveTrendButton(); // 트렌드 분석탭이 기본적으로 활성화
-        const selectedCrop = cropSelect.value;
-        const startDate = new Date(startDateInput.value);
-        const endDate = new Date(endDateInput.value);
+    // 초기 데이터 로딩 (품목, 산지, 주차)
+    async function loadInitialData() {
+        try {
+            // 품목 로딩
+            const itemsResponse = await fetch('/api/items');
+            const items = await itemsResponse.json();
+            cropSelect.innerHTML = '';
+            aiCropSelect.innerHTML = '';
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.item_code;
+                option.textContent = item.gds_mclsf_nm;
+                cropSelect.appendChild(option);
 
-        let labels = [];
-        let priceData = [];
+                const aiOption = document.createElement('option');
+                aiOption.value = item.item_code;
+                aiOption.textContent = item.gds_mclsf_nm;
+                aiCropSelect.appendChild(aiOption);
+            });
 
-        if (trendView === 'weekly') {
-            let currentDate = new Date(startDate);
-            while (currentDate <= endDate) {
-                const weekNumber = Math.ceil(currentDate.getDate() / 7);
-                const month = currentDate.getMonth() + 1;
-                labels.push(`${month}월 ${weekNumber}주차`);
-                priceData.push(3000 + Math.random() * 500);
-                currentDate.setDate(currentDate.getDate() + 7);
+            // 산지 로딩
+            const sanjisResponse = await fetch('/api/sanjis');
+            const sanjis = await sanjisResponse.json();
+            originSelect.innerHTML = '<option value="">전체</option>';
+            sanjis.forEach(sanji => {
+                const option = document.createElement('option');
+                option.value = sanji.j_sanji_cd;
+                option.textContent = sanji.j_sanji_nm;
+                originSelect.appendChild(option);
+            });
+
+            // 최신 주차 정보 로딩 (날짜 입력 필드 기본값 설정)
+            const weeksResponse = await fetch('/api/latest_weeks');
+            const weeks = await weeksResponse.json();
+            if (weeks.start_week && weeks.end_week) {
+                // API에서 주차 정보를 YYYYWW 형식으로 반환한다고 가정하고, 이를 날짜로 변환하여 설정
+                // 이 부분은 실제 API 응답 형식에 따라 조정이 필요합니다.
+                // 현재는 YYYY-MM-DD 형식으로 날짜를 설정합니다.
+                const today = new Date();
+                const oneMonthAgo = new Date();
+                oneMonthAgo.setMonth(today.getMonth() - 1);
+                startDateInput.valueAsDate = oneMonthAgo;
+                endDateInput.valueAsDate = today;
             }
-        } else { // 일간 보기
-            let currentDate = new Date(startDate);
-            while (currentDate <= endDate) {
-                labels.push(currentDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }));
-                priceData.push(3000 + Math.random() * 500);
-                currentDate.setDate(currentDate.getDate() + 1);
+
+            // 초기 품종 로딩
+            if (cropSelect.value) {
+                loadVarieties(cropSelect.value);
             }
+
+            // 초기 차트 렌더링
+            switchTab('trend');
+
+        } catch (error) {
+            console.error('Error loading initial data:', error);
+        }
+    }
+
+    // 품종 동적 로딩
+    async function loadVarieties(itemCode) {
+        try {
+            const varietiesResponse = await fetch(`/api/varieties?item_code=${itemCode}`);
+            const varieties = await varietiesResponse.json();
+            varietySelect.innerHTML = '<option value="">전체</option>';
+            varieties.forEach(variety => {
+                const option = document.createElement('option');
+                option.value = variety.crop_full_code;
+                option.textContent = variety.gds_sclsf_nm;
+                varietySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading varieties:', error);
+        }
+    }
+
+    // 트렌드 분석 로직 (API 연동)
+    async function renderTrendChart() {
+        setActiveTrendButton();
+        const itemCode = cropSelect.value;
+        const cropFullCode = varietySelect.value;
+        const grade = gradeSelect.value;
+        const sanjiCd = originSelect.value;
+        
+        // 날짜를 주차로 변환
+        const startWeek = getWeekNumberFromDate(startDateInput.value);
+        const endWeek = getWeekNumberFromDate(endDateInput.value);
+
+        if (!itemCode) {
+            alert('품목을 선택해주세요.');
+            return;
         }
 
-        const volumeData = priceData.map(() => Math.random() * 5000 + 10000);
-        const chartTitle = `${selectedCrop} 가격 및 거래량 (${trendView === 'weekly' ? '주간' : '일간'})`;
-        drawChart(labels, priceData, volumeData, selectedCrop, chartTitle);
-        updateDataTable(labels, priceData, volumeData);
+        try {
+            const params = new URLSearchParams({
+                item_code: itemCode,
+                ...(cropFullCode && { crop_full_code: cropFullCode }),
+                ...(grade && { grade: grade }),
+                ...(sanjiCd && { sanji_cd: sanjiCd }),
+                ...(startWeek && { start_week: startWeek }),
+                ...(endWeek && { end_week: endWeek })
+            });
+            const response = await fetch(`/api/weekly_trade?${params.toString()}`);
+            const data = await response.json();
+
+            const labels = data.map(row => row.weekno);
+            const priceData = data.map(row => row.avg_price);
+            const volumeData = data.map(row => row.unit_tot_qty);
+            const chartTitle = `${cropSelect.options[cropSelect.selectedIndex].text} 가격 및 거래량 (${trendView === 'weekly' ? '주간' : '일간'})`;
+            
+            drawChart(labels, priceData, volumeData, cropSelect.options[cropSelect.selectedIndex].text, chartTitle);
+            updateDataTable(labels, priceData, volumeData);
+
+        } catch (error) {
+            console.error('Error fetching weekly trade data:', error);
+            alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
+        }
     }
 
     function setActiveTrendButton() {
@@ -106,35 +196,34 @@ document.addEventListener('DOMContentLoaded', function() {
         renderTrendChart();
     });
     trendQueryBtn.addEventListener('click', renderTrendChart);
+    cropSelect.addEventListener('change', () => loadVarieties(cropSelect.value));
 
-    // AI예측 로직
+    // AI예측 로직 (임시 데이터 사용)
     function renderAiPredictionChart() {
         const selectedCrop = aiCropSelect.value;
-        const baseDate = new Date(); // Always start from today
         const termDays = parseInt(aiTermSelect.value, 10);
 
         const labels = [];
         const historicalData = [];
         const predictionData = [];
 
-        // 오늘 날짜로부터 3일 이전까지의 무작위 데이터 생성
-        for (let i = 3; i > 0; i--) {
+        // 임시 데이터 생성 (실제 API 연동 필요)
+        const baseDate = new Date();
+        for (let i = 7; i > 0; i--) { // 과거 7일
             const date = new Date(baseDate);
             date.setDate(baseDate.getDate() - i);
             labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
             historicalData.push(3000 + Math.random() * 500);
         }
 
-        // 예측 데이터 생성
-        for (let i = 0; i < termDays; i++) {
+        for (let i = 0; i < termDays; i++) { // 예측 기간
             const date = new Date(baseDate);
             date.setDate(baseDate.getDate() + i);
             labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
-            predictionData.push(null); // Placeholder for prediction
+            predictionData.push(null);
         }
         
         const fullPriceData = historicalData.concat(predictionData);
-        // 예측 데이터의 시작점을 위에서 생성한 데이터로 만들어준다.
         const predictionLine = new Array(historicalData.length - 1).fill(null);
         let lastHistoricalValue = historicalData[historicalData.length - 1];
         for(let i = 0; i < termDays + 1; i++) {
@@ -142,8 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const volumeData = fullPriceData.map(() => Math.random() * 5000 + 10000);
-        const chartTitle = `${selectedCrop} AI 예측 결과`;
-        drawAiChart(labels, fullPriceData, predictionLine, volumeData, selectedCrop, chartTitle);
+        const chartTitle = `${aiCropSelect.options[aiCropSelect.selectedIndex].text} AI 예측 결과`;
+        drawAiChart(labels, fullPriceData, predictionLine, volumeData, aiCropSelect.options[aiCropSelect.selectedIndex].text, chartTitle);
         updateDataTable(labels, fullPriceData, volumeData);
     }
 
@@ -242,5 +331,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initial Load
-    switchTab('trend');
+    loadInitialData();
 });

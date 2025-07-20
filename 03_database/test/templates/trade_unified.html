@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>거래 데이터 조회(일간/주간)</title>
+    <style>
+        .toggle-btn { margin: 1em 0; }
+        .toggle-btn button { padding: 0.5em 1em; font-weight: bold; }
+        .toggle-btn .active { background: #2e6da4; color: #fff; border-radius: 6px; }
+    </style>
+    
+</head>
+<body>
+    <h2>거래 데이터 조회 <span id="mode-label">[주간]</span></h2>
+
+<!--    <div class="toggle-btn">
+        <button id="btn-weekly" class="active">주간</button>
+        <button id="btn-daily">일간</button>
+    </div> -->
+
+    <form id="filter-form">
+        <label>품목:
+        <select id="item-select" name="item_code" required></select>
+        </label>
+        <label>품종:
+        <select id="variety-select" name="crop_full_code"><option value="">전체</option></select>
+        </label>
+        <label>등급:
+        <select id="grade-select" name="grade">
+            <option value="">전체</option>
+            <option value="고">고</option>
+            <option value="중">중</option>
+            <option value="저">저</option>
+        </select>
+        </label>
+        <label>산지:
+        <select id="sanji-select" name="sanji_cd"><option value="">전체</option></select>
+        </label>
+<!--    <span id="date-inputs">
+        <label>기간 :
+            <input type="text" id="start-week" name="start_week" placeholder="예: 202410" required>
+        </label>
+        <label> ~ 
+            <input type="text" id="end-week" name="end_week" placeholder="예: 202423" required>
+        </label>
+        </span>
+        <span id="day-inputs" style="display:none">
+        <label>시작일:
+            <input type="date" id="start-date" name="start_date">
+        </label>
+        <label>종료일:
+            <input type="date" id="end-date" name="end_date">
+        </label>
+        </span>--> 
+        <span id="period-fields"></span>
+        <button type="submit">조회</button>
+    </form>
+    <hr>
+    <table border="1" id="result-table">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    <script src="{{ url_for('static', filename='js/trade_page.js') }}"></script>
+</body>
+</html>

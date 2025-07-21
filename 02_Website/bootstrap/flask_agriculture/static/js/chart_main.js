@@ -21,6 +21,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDaily = document.getElementById('btn-daily');
     let trendView = 'weekly'; // Default to weekly
 
+    const periodFields = document.getElementById('period-fields');
+
+    const weekInputs = `
+        <label>시작 주차:</label>
+        <input type="text" id="start-week" placeholder="예: 202410">
+        <span>~</span>
+        <label>종료 주차:</label>
+        <input type="text" id="end-week" placeholder="예: 202423">
+    `;
+
+    const dayInputs = `
+        <label>기간:</label>
+        <input type="date" id="start-date">
+        <span>~</span>
+        <input type="date" id="end-date">
+    `;
+
     // AI예측 elements
     const aiPredictBtn = document.getElementById('ai-predict-btn');
     const aiCropSelect = document.getElementById('ai-crop-select');
@@ -57,9 +74,12 @@ document.addEventListener('DOMContentLoaded', function() {
     tabTrend.addEventListener('click', () => switchTab('trend'));
     tabAi.addEventListener('click', () => switchTab('ai'));
 
-    // 초기 데이터 로딩 (품목, 산지, 주차)
+    // 초기 데이터 로딩
     async function loadInitialData() {
         try {
+            // 주간/일간 모드에 따른 초기화
+            await switchTrendView(trendView, true);
+
             // 품목 로딩
             const itemsResponse = await fetch('/api/items');
             const items = await itemsResponse.json();
@@ -69,43 +89,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const option = document.createElement('option');
                 option.value = item.item_code;
                 option.textContent = item.gds_mclsf_nm;
-                cropSelect.appendChild(option);
-
-                const aiOption = document.createElement('option');
-                aiOption.value = item.item_code;
-                aiOption.textContent = item.gds_mclsf_nm;
-                aiCropSelect.appendChild(aiOption);
+                cropSelect.appendChild(option.cloneNode(true));
+                aiCropSelect.appendChild(option);
             });
 
-            // 산지 로딩
-            const sanjisResponse = await fetch('/api/sanjis');
-            const sanjis = await sanjisResponse.json();
-            originSelect.innerHTML = '<option value="">전체</option>';
-            sanjis.forEach(sanji => {
-                const option = document.createElement('option');
-                option.value = sanji.j_sanji_cd;
-                option.textContent = sanji.j_sanji_nm;
-                originSelect.appendChild(option);
-            });
-
-            // 최신 주차 정보 로딩 (날짜 입력 필드 기본값 설정)
-            const weeksResponse = await fetch('/api/latest_weeks');
-            const weeks = await weeksResponse.json();
-            if (weeks.start_week && weeks.end_week) {
-                // API에서 주차 정보를 YYYYWW 형식으로 반환한다고 가정하고, 이를 날짜로 변환하여 설정
-                // 이 부분은 실제 API 응답 형식에 따라 조정이 필요합니다.
-                // 현재는 YYYY-MM-DD 형식으로 날짜를 설정합니다.
-                const today = new Date();
-                const oneMonthAgo = new Date();
-                oneMonthAgo.setMonth(today.getMonth() - 1);
-                startDateInput.valueAsDate = oneMonthAgo;
-                endDateInput.valueAsDate = today;
-            }
-
-            // 초기 품종 로딩
-            if (cropSelect.value) {
-                loadVarieties(cropSelect.value);
-            }
+            // 초기 필터 데이터 로딩
+            await fetchVarieties();
+            await fetchGrades();
+            await fetchSanjis();
 
             // 초기 차트 렌더링
             switchTab('trend');
@@ -115,21 +106,120 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 품종 동적 로딩
-    async function loadVarieties(itemCode) {
-        try {
-            const varietiesResponse = await fetch(`/api/varieties?item_code=${itemCode}`);
-            const varieties = await varietiesResponse.json();
-            varietySelect.innerHTML = '<option value="">전체</option>';
-            varieties.forEach(variety => {
-                const option = document.createElement('option');
-                option.value = variety.crop_full_code;
-                option.textContent = variety.gds_sclsf_nm;
-                varietySelect.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error loading varieties:', error);
+    // 주간/일간 조회 모드 변경
+    async function switchTrendView(newView, isInitialLoad = false) {
+        trendView = newView;
+        periodFields.innerHTML = trendView === 'weekly' ? weekInputs : dayInputs;
+
+        if (trendView === 'weekly') {
+            const weeksResponse = await fetch('/api/latest_weeks');
+            const weeks = await weeksResponse.json();
+            document.getElementById('start-week').value = weeks.start_week;
+            document.getElementById('end-week').value = weeks.end_week;
+        } else {
+            const datesResponse = await fetch('/api/latest_dates');
+            const dates = await datesResponse.json();
+            document.getElementById('start-date').value = dates.start_date;
+            document.getElementById('end-date').value = dates.end_date;
         }
+
+        if (!isInitialLoad) {
+            await fetchVarieties();
+            await fetchGrades();
+            await fetchSanjis();
+            renderTrendChart();
+        }
+        setActiveTrendButton();
+    }
+
+    // 품종 동적 로딩
+    async function fetchVarieties() {
+        const itemCode = cropSelect.value;
+        const select = varietySelect;
+        const prevValue = select.value || '';
+        let start, end;
+        if (trendView === 'weekly') {
+            start = document.getElementById('start-week').value;
+            end = document.getElementById('end-week').value;
+        } else {
+            start = document.getElementById('start-date').value.replaceAll('-', '');
+            end = document.getElementById('end-date').value.replaceAll('-', '');
+        }
+        if (!itemCode || !start || !end) {
+            select.innerHTML = `<option value="">전체</option>`;
+            return;
+        }
+        const res = await fetch(`/api/varieties?item_code=${itemCode}&start_week=${start}&end_week=${end}`);
+        const varieties = await res.json();
+        select.innerHTML = `<option value="">전체</option>` +
+            varieties.map(v =>
+                `<option value="${v.crop_full_code}" ${v.crop_full_code === prevValue ? 'selected' : ''}>
+        ${v.gds_sclsf_nm}
+        </option>`
+            ).join('');
+    }
+
+    // 등급 동적 로딩
+    async function fetchGrades() {
+        const itemCode = cropSelect.value;
+        const cropFullCode = varietySelect.value;
+        const select = gradeSelect;
+        const prevValue = select.value || '';
+        let start, end;
+        if (trendView === 'weekly') {
+            start = document.getElementById('start-week').value;
+            end = document.getElementById('end-week').value;
+        } else {
+            start = document.getElementById('start-date').value.replaceAll('-', '');
+            end = document.getElementById('end-date').value.replaceAll('-', '');
+        }
+        if (!itemCode || !start || !end) {
+            select.innerHTML = `<option value="">전체</option>`;
+            return;
+        }
+
+        let url = `/api/grades?item_code=${itemCode}&start_week=${start}&end_week=${end}`;
+        if (cropFullCode) url += `&crop_full_code=${cropFullCode}`;
+        const res = await fetch(url);
+        const grades = await res.json();
+
+        select.innerHTML = `<option value="">전체</option>` +
+            grades.map(g =>
+                `<option value="${g}" ${g === prevValue ? 'selected' : ''}>${g}</option>`
+            ).join('');
+    }
+
+
+    // 산지 동적 로딩
+    async function fetchSanjis() {
+        const itemCode = cropSelect.value;
+        const cropFullCode = varietySelect.value;
+        const grade = gradeSelect.value;
+        const select = originSelect;
+        const prevValue = select.value || '';
+        let start, end;
+        if (trendView === 'weekly') {
+            start = document.getElementById('start-week').value;
+            end = document.getElementById('end-week').value;
+        } else {
+            start = document.getElementById('start-date').value.replaceAll('-', '');
+            end = document.getElementById('end-date').value.replaceAll('-', '');
+        }
+        if (!itemCode || !start || !end) {
+            select.innerHTML = '<option value="">전체</option>';
+            return;
+        }
+        let query = `?item_code=${itemCode}&start_week=${start}&end_week=${end}`;
+        if (cropFullCode) query += `&crop_full_code=${cropFullCode}`;
+        if (grade) query += `&grade=${grade}`;
+        const res = await fetch(`/api/sanjis${query}`);
+        const sanjis = await res.json();
+        select.innerHTML = '<option value="">전체</option>' +
+            sanjis.map(s =>
+                `<option value="${s.j_sanji_cd}" ${s.j_sanji_cd === prevValue ? 'selected' : ''}>
+        ${s.j_sanji_nm}
+        </option>`
+            ).join('');
     }
 
     // 트렌드 분석 로직 (API 연동)
@@ -139,10 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const cropFullCode = varietySelect.value;
         const grade = gradeSelect.value;
         const sanjiCd = originSelect.value;
-        
-        // 날짜를 주차로 변환
-        const startWeek = getWeekNumberFromDate(startDateInput.value);
-        const endWeek = getWeekNumberFromDate(endDateInput.value);
 
         if (!itemCode) {
             alert('품목을 선택해주세요.');
@@ -150,27 +236,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            const apiPath = trendView === 'weekly' ? '/api/weekly_trade' : '/api/daily_trade';
             const params = new URLSearchParams({
                 item_code: itemCode,
                 ...(cropFullCode && { crop_full_code: cropFullCode }),
                 ...(grade && { grade: grade }),
                 ...(sanjiCd && { sanji_cd: sanjiCd }),
-                ...(startWeek && { start_week: startWeek }),
-                ...(endWeek && { end_week: endWeek })
             });
-            const response = await fetch(`/api/weekly_trade?${params.toString()}`);
+
+            if (trendView === 'weekly') {
+                params.append('start_week', document.getElementById('start-week').value);
+                params.append('end_week', document.getElementById('end-week').value);
+            } else {
+                params.append('start_date', document.getElementById('start-date').value);
+                params.append('end_date', document.getElementById('end-date').value);
+            }
+
+            const response = await fetch(`${apiPath}?${params.toString()}`);
             const data = await response.json();
 
-            const labels = data.map(row => row.weekno);
+            const labels = data.map(row => trendView === 'weekly' ? row.weekno : row.trd_clcln_ymd);
             const priceData = data.map(row => row.avg_price);
             const volumeData = data.map(row => row.unit_tot_qty);
             const chartTitle = `${cropSelect.options[cropSelect.selectedIndex].text} 가격 및 거래량 (${trendView === 'weekly' ? '주간' : '일간'})`;
-            
+
             drawChart(labels, priceData, volumeData, cropSelect.options[cropSelect.selectedIndex].text, chartTitle);
             updateDataTable(labels, priceData, volumeData);
 
         } catch (error) {
-            console.error('Error fetching weekly trade data:', error);
+            console.error('Error fetching trade data:', error);
             alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
         }
     }
@@ -185,18 +279,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    btnWeekly.addEventListener('click', () => {
-        trendView = 'weekly';
-        setActiveTrendButton();
-        renderTrendChart();
-    });
-    btnDaily.addEventListener('click', () => {
-        trendView = 'daily';
-        setActiveTrendButton();
-        renderTrendChart();
-    });
+    btnWeekly.addEventListener('click', () => switchTrendView('weekly'));
+    btnDaily.addEventListener('click', () => switchTrendView('daily'));
     trendQueryBtn.addEventListener('click', renderTrendChart);
-    cropSelect.addEventListener('change', () => loadVarieties(cropSelect.value));
+
+    // 필터 변경 감지
+    cropSelect.addEventListener('change', async () => {
+        await fetchVarieties();
+        await fetchGrades();
+        await fetchSanjis();
+    });
+
+    // 날짜 변경 감지 (이벤트 위임 사용)
+    periodFields.addEventListener('change', async (e) => {
+        if (e.target.matches('#start-week, #end-week, #start-date, #end-date')) {
+            await fetchVarieties();
+            await fetchGrades();
+            await fetchSanjis();
+        }
+    });
+
+    varietySelect.addEventListener('change', async () => {
+        await fetchGrades();
+        await fetchSanjis();
+    });
+
+    gradeSelect.addEventListener('change', fetchSanjis);
 
     // AI예측 로직 (임시 데이터 사용)
     function renderAiPredictionChart() {

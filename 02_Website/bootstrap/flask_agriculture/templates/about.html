@@ -2,99 +2,73 @@
 {% block content %}
 <main class="main">
 
-    <!-- Page Title -->
-    <div class="page-title dark-background" data-aos="fade" style="background-image: url(static/assets/img/page-title-bg.webp);">
-      <div class="container position-relative">
-        <h1>팀원 소개</h1>
-        <p>Team</p>
-      </div>
-    </div><!-- End Page Title -->
+  <!-- Page Title -->
+  <div class="page-title dark-background" data-aos="fade" style="background-image: url('{{ url_for('static', filename='assets/img/page-title-bg.webp') }}');">
+    <div class="container position-relative">
+      <h1>팀원 소개</h1>
+      <p>Team</p>
+    </div>
+  </div><!-- End Page Title -->
 
+  <!-- Team Section -->
+  <section class="team section" id="team">
+    <div class="container">
+      <div class="row gy-4">
 
-    <!-- Team Section -->
-    <section class="team-15 team section" id="team">
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Team</h2>
-        <p>Necessitatibus eius consequatur</p>
-      </div><!-- End Section Title -->
+        {% set team = [
+          {
+            'name': '박진성',
+            'role': 'Farmer',
+            'image': 'team-1.jpg',
+            'github': 'https://github.com/jsa3338/',
+            'desc': '기술 기반 농업을 실현하는 스마트 농부'
+          },
+          {
+            'name': '주용곤',
+            'role': 'Marketing',
+            'image': 'team-2.jpg',
+            'github': 'https://github.com/yongkoni/',
+            'desc': '데이터로 시장을 읽고 설득하는 마케터'
+          },
+          {
+            'name': '박동현',
+            'role': 'Content',
+            'image': 'team-3.jpg',
+            'github': 'https://github.com/onizuka-38/',
+            'desc': '이해하기 쉬운 농업 콘텐츠 제작자'
+          },
+          {
+            'name': '심재성',
+            'role': 'Accountant',
+            'image': 'team-4.jpg',
+            'github': 'https://github.com/tangerineTaste/',
+            'desc': '정확한 숫자로 신뢰를 쌓는 회계 전문가'
+          }
+        ] %}
 
-      <div class="content">
-        <div class="container">
-
-          <div class="row">
-            <div class="col-lg-3 col-md-6 mb-4">
-              <div class="person">
-                <figure>
-                  <img src="static/assets/img/team/team-1.jpg" alt="Image" class="img-fluid">
-                  <div class="social">
-                    <a href="#"><span class="bi bi-facebook"></span></a>
-                    <a href="#"><span class="bi bi-twitter-x"></span></a>
-                    <a href="#"><span class="bi bi-linkedin"></span></a>
-                  </div>
-                </figure>
-                <div class="person-contents">
-                  <h3>Joshua Stefan</h3>
-                  <span class="position">Farmer</span>
+        {% for member in team %}
+        <div class="col-lg-3 col-md-6">
+          <div class="team-card-wrapper" data-aos="fade-up" data-aos-delay="{{ 100 + loop.index0 * 100 }}">
+            <div class="team-card">
+              <div class="member-img">
+                <img src="{{ url_for('static', filename='assets/img/team/' + member.image) }}" class="img-fluid" alt="{{ member.name }}">
+                <div class="social">
+                  <a href="{{ member.github }}" target="_blank"><i class="bi bi-github"></i></a>
                 </div>
               </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-              <div class="person">
-                <figure>
-                  <img src="static/assets/img/team/team-2.jpg" alt="Image" class="img-fluid">
-                  <div class="social">
-                    <a href="#"><span class="bi bi-facebook"></span></a>
-                    <a href="#"><span class="bi bi-twitter-x"></span></a>
-                    <a href="#"><span class="bi bi-linkedin"></span></a>
-                  </div>
-                </figure>
-                <div class="person-contents">
-                  <h3>Sheena Anderson</h3>
-                  <span class="position">Marketing</span>
-                </div>
+              <div class="member-info">
+                <h4>{{ member.name }}</h4>
+                <span>{{ member.role }}</span>
+                <p>{{ member.desc }}</p>
               </div>
             </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-              <div class="person">
-                <figure>
-                  <img src="static/assets/img/team/team-3.jpg" alt="Image" class="img-fluid">
-                  <div class="social">
-                    <a href="#"><span class="bi bi-facebook"></span></a>
-                    <a href="#"><span class="bi bi-twitter-x"></span></a>
-                    <a href="#"><span class="bi bi-linkedin"></span></a>
-                  </div>
-                </figure>
-                <div class="person-contents">
-                  <h3>Evan Smith</h3>
-                  <span class="position">Content</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-              <div class="person">
-                <figure>
-                  <img src="static/assets/img/team/team-4.jpg" alt="Image" class="img-fluid">
-                  <div class="social">
-                    <a href="#"><span class="bi bi-facebook"></span></a>
-                    <a href="#"><span class="bi bi-twitter-x"></span></a>
-                    <a href="#"><span class="bi bi-linkedin"></span></a>
-                  </div>
-                </figure>
-                <div class="person-contents">
-                  <h3>Kaylie Jones</h3>
-                  <span class="position">Accountant</span>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
-      </div>
+        {% endfor %}
 
-    </section><!-- /Team Section -->
-  </main>
+      </div>
+    </div>
+  </section><!-- /Team Section -->
+
+</main>
 {% endblock %}

@@ -55,6 +55,8 @@
                         <input type="text" id="detailAddress" name="detailAddress" placeholder="상세주소"  size="60" required><br>
                         <input type="hidden" id="extraAddress" placeholder="참고항목"  size="60">
                         <input type="hidden" id="engAddress" placeholder="영문주소"  size="60" ><br>
+                        <input type="hidden" id="siNm" name="siNm">
+                        <input type="hidden" id="sggNm" name="sggNm">
                     </div>
 
                     <button type="submit" class="btn btn-primary">가입하기</button>
@@ -94,6 +96,8 @@
                 document.getElementById("jibunAddress").value = data.jibunAddress;
          
                 document.getElementById("engAddress").value = data.addressEnglish;
+                document.getElementById("siNm").value = data.sido;
+                document.getElementById("sggNm").value = data.sigungu;
 
                 if(roadAddr !== ''){
                     document.getElementById("extraAddress").value = extraRoadAddr;

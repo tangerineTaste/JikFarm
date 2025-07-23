@@ -113,6 +113,23 @@ def signup():
                 sql = "INSERT INTO members (login_id, nickname, name, password, is_admin, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, NOW(), NOW())"
                 cursor.execute(sql, (username, nickname, request.form['name'], hashed_password, False))
                 conn.commit()
+
+                # 새로 생성된 member_id 가져오기
+                member_id = cursor.lastrowid
+
+                # 주소 정보 가져오기
+                postcode = request.form['postcode']
+                road_full_addr = request.form['roadAddress']
+                addr_detail = request.form['detailAddress']
+                si_nm = request.form['siNm']
+                sgg_nm = request.form['sggNm']
+
+                # member_addresses 테이블에 주소 정보 삽입
+                if member_id:
+                    address_sql = "INSERT INTO member_addresses (member_id, road_full_addr, zip_no, addr_detail, si_nm, sgg_nm, created_at) VALUES (%s, %s, %s, %s, %s, %s, NOW())"
+                    cursor.execute(address_sql, (member_id, road_full_addr, postcode, addr_detail, si_nm, sgg_nm))
+                    conn.commit()
+
                 flash('회원가입이 완료되었습니다. 로그인해주세요.', 'success')
                 return redirect(url_for('login'))
         finally:
@@ -540,6 +557,62 @@ def get_ai_historical_data():
                 to_date_str(row, 'trd_clcln_ymd')
 
             return jsonify(rows)
+    finally:
+        conn.close()
+
+@app.route('/api/interest_crops', methods=['GET'])
+def get_interest_crops():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = "SELECT crop_id, display_name FROM interest_whitelist WHERE is_active = TRUE ORDER BY sort_order"
+            cursor.execute(query)
+            crops = cursor.fetchall()
+            return jsonify(crops)
+    finally:
+        conn.close()
+
+@app.route('/api/member_interest_crops', methods=['GET'])
+def get_member_interest_crops():
+    if 'member_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    member_id = session['member_id']
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = "SELECT crop_id FROM member_crops WHERE member_id = %s"
+            cursor.execute(query, (member_id,))
+            member_crops = [row['crop_id'] for row in cursor.fetchall()] # type: ignore
+            return jsonify(member_crops)
+    finally:
+        conn.close()
+
+@app.route('/api/save_member_interest_crops', methods=['POST'])
+def save_member_interest_crops():
+    if 'member_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    member_id = session['member_id']
+    selected_crop_ids = request.json.get('crop_ids', [])
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            # 기존 관심 품목 삭제
+            delete_sql = "DELETE FROM member_crops WHERE member_id = %s"
+            cursor.execute(delete_sql, (member_id,))
+
+            # 새로운 관심 품목 삽입
+            if selected_crop_ids:
+                insert_sql = "INSERT INTO member_crops (member_id, crop_id) VALUES (%s, %s)"
+                for crop_id in selected_crop_ids:
+                    cursor.execute(insert_sql, (member_id, crop_id))
+            conn.commit()
+            return jsonify({'message': 'Interest crops saved successfully'}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 

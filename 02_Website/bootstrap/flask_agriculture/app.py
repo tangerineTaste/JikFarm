@@ -478,7 +478,7 @@ def get_sanjis():
 
     where = [f"item_code = %s", f"{date_col} >= %s", f"{date_col} <= %s"]
     params = [item_code, start_week, end_week]
-    
+
     if crop_full_code:
         where.append("crop_full_code = %s")
         params.append(crop_full_code)
@@ -507,5 +507,42 @@ def get_sanjis():
     conn.close()
     return jsonify(rows)
 
+@app.route('/api/ai_historical_data', methods=['GET'])
+def get_ai_historical_data():
+    item_code = request.args.get('item_code')
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    print(item_code,start_date_str, end_date_str)
+    
+    if not item_code or not start_date_str or not end_date_str:
+        return jsonify({'error': 'item_code, start_date, and end_date are required'}), 400
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                SELECT
+                    trd_clcln_ymd,
+                    ROUND(SUM(totprc) / NULLIF(SUM(unit_tot_qty), 0), 0) AS avg_price,
+                    ROUND(SUM(unit_tot_qty), 0) AS unit_tot_qty
+                FROM fact_trade
+                WHERE item_code = %s
+                  AND trd_clcln_ymd BETWEEN %s AND %s
+                GROUP BY trd_clcln_ymd
+                ORDER BY trd_clcln_ymd
+            """
+            cursor.execute(query, (item_code, start_date_str, end_date_str))
+            rows = cursor.fetchall()
+            
+            # 날짜컬럼 yyyy-MM-dd 변환
+            for row in rows:
+                to_date_str(row, 'trd_clcln_ymd')
+
+            return jsonify(rows)
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
+

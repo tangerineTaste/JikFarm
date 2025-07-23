@@ -307,41 +307,102 @@ document.addEventListener('DOMContentLoaded', function() {
     gradeSelect.addEventListener('change', fetchSanjis);
 
     // AI예측 로직 (임시 데이터 사용)
-    function renderAiPredictionChart() {
+    async function renderAiPredictionChart() {
         const selectedCrop = aiCropSelect.value;
         const termDays = parseInt(aiTermSelect.value, 10);
 
-        const labels = [];
-        const historicalData = [];
-        const predictionData = [];
-
-        // 임시 데이터 생성 (실제 API 연동 필요)
-        const baseDate = new Date();
-        for (let i = 7; i > 0; i--) { // 과거 7일
-            const date = new Date(baseDate);
-            date.setDate(baseDate.getDate() - i);
-            labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
-            historicalData.push(3000 + Math.random() * 500);
+        if (!selectedCrop) {
+            alert('품목을 선택해주세요.');
+            return;
         }
 
-        for (let i = 0; i < termDays; i++) { // 예측 기간
-            const date = new Date(baseDate);
-            date.setDate(baseDate.getDate() + i);
-            labels.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }));
-            predictionData.push(null);
-        }
-        
-        const fullPriceData = historicalData.concat(predictionData);
-        const predictionLine = new Array(historicalData.length - 1).fill(null);
-        let lastHistoricalValue = historicalData[historicalData.length - 1];
-        for(let i = 0; i < termDays + 1; i++) {
-             predictionLine.push(lastHistoricalValue + (Math.random() - 0.5) * 200 * i);
+        // Define the full date range for labels (historical + prediction)
+        const today = new Date();
+        const historicalStartDate = new Date();
+        historicalStartDate.setDate(today.getDate() - 7); // Past 7 days for historical data
+
+        const allLabels = [];
+        const dateToLabelMap = new Map(); // To easily map fetched data to labels
+
+        // Generate labels for historical period
+        for (let d = new Date(historicalStartDate); d <= today; d.setDate(d.getDate() + 1)) {
+            const label = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+            allLabels.push(label);
+            dateToLabelMap.set(d.toISOString().slice(0, 10), label);
         }
 
-        const volumeData = fullPriceData.map(() => Math.random() * 5000 + 10000);
-        const chartTitle = `${aiCropSelect.options[aiCropSelect.selectedIndex].text} AI 예측 결과`;
-        drawAiChart(labels, fullPriceData, predictionLine, volumeData, aiCropSelect.options[aiCropSelect.selectedIndex].text, chartTitle);
-        updateDataTable(labels, fullPriceData, volumeData);
+        // Generate labels for prediction period
+        for (let i = 1; i <= termDays; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            const label = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+            allLabels.push(label);
+            dateToLabelMap.set(date.toISOString().slice(0, 10), label); // Store for potential future use if prediction API returns dates
+        }
+
+        const historicalEndDateStr = today.toISOString().slice(0, 10);
+        const historicalStartDateStr = historicalStartDate.toISOString().slice(0, 10);
+
+        try {
+            const response = await fetch(`/api/ai_historical_data?item_code=${selectedCrop}&start_date=${historicalStartDateStr}&end_date=${historicalEndDateStr}`);
+            const fetchedHistoricalData = await response.json();
+
+            const priceData = new Array(allLabels.length).fill(null);
+            const volumeData = new Array(allLabels.length).fill(null);
+            const predictionLine = new Array(allLabels.length).fill(null);
+
+            let lastHistoricalValue = 0;
+            let lastHistoricalIndex = -1;
+
+            // Populate historical data
+            fetchedHistoricalData.forEach(row => {
+                const dateStr = row.trd_clcln_ymd; // Assuming this is 'YYYY-MM-DD'
+                const label = new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+                const index = allLabels.indexOf(label);
+                if (index !== -1) {
+                    priceData[index] = row.avg_price;
+                    volumeData[index] = row.unit_tot_qty;
+                    lastHistoricalValue = row.avg_price;
+                    lastHistoricalIndex = index;
+                }
+            });
+
+            // If no historical data was fetched, set a default starting point for prediction
+            if (lastHistoricalIndex === -1) {
+                lastHistoricalValue = 3000; // Example default starting price
+            }
+
+            // Populate prediction data
+            for (let i = 1; i <= termDays; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const label = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+                const index = allLabels.indexOf(label);
+
+                if (index !== -1) {
+                    // Temporary prediction value: random fluctuation from the last historical value
+                    lastHistoricalValue += (Math.random() - 0.5) * 200;
+                    predictionLine[index] = lastHistoricalValue;
+                    // For the main priceData, prediction period should be null or a different color
+                    // priceData[index] = null; // Already null from initialization
+                    volumeData[index] = Math.random() * 5000 + 10000; // Temporary volume
+                }
+            }
+
+            // Ensure prediction line starts from the last historical point
+            if (lastHistoricalIndex !== -1) {
+                predictionLine[lastHistoricalIndex] = priceData[lastHistoricalIndex];
+            }
+
+
+            const chartTitle = `${aiCropSelect.options[aiCropSelect.selectedIndex].text} AI 예측 결과`;
+            drawAiChart(allLabels, priceData, predictionLine, volumeData, aiCropSelect.options[aiCropSelect.selectedIndex].text, chartTitle);
+            updateDataTable(allLabels, priceData, volumeData);
+
+        } catch (error) {
+            console.error('Error fetching AI prediction data:', error);
+            alert('AI 예측 데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
+        }
     }
 
     aiPredictBtn.addEventListener('click', renderAiPredictionChart);
@@ -431,7 +492,17 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.innerHTML = '';
         labels.forEach((label, index) => {
             const row = document.createElement('tr');
-            const price = priceData[index] ? new Intl.NumberFormat('ko-KR').format(priceData[index].toFixed(0)) : 'N/A';
+            // Determine which price to display: historical or predicted
+            let displayPrice;
+            if (priceData[index] !== null) {
+                displayPrice = priceData[index]; // Historical price
+            } else if (priceChart && priceChart.data.datasets[1] && priceChart.data.datasets[1].data[index] !== null) {
+                displayPrice = priceChart.data.datasets[1].data[index]; // Predicted price from the second dataset (predictionLine)
+            } else {
+                displayPrice = null; // No price available
+            }
+
+            const price = displayPrice ? new Intl.NumberFormat('ko-KR').format(displayPrice.toFixed(0)) : 'N/A';
             const volume = volumeData[index] ? new Intl.NumberFormat('ko-KR').format(volumeData[index].toFixed(0)) : 'N/A';
             row.innerHTML = `<td>${label}</td><td>${price}</td><td>${volume}</td>`;
             tableBody.appendChild(row);

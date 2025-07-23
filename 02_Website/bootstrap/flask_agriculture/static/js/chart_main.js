@@ -93,6 +93,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 aiCropSelect.appendChild(option);
             });
 
+            // 로그인된 사용자의 관심 품목을 가져와 기본 선택
+            const memberCropsResponse = await fetch('/api/member_interest_crops');
+            const memberCrops = await memberCropsResponse.json();
+
+            if (memberCrops.length > 0) {
+                const firstInterestCrop = memberCrops[0];
+                // cropSelect (트렌드 분석 탭)
+                if ([...cropSelect.options].some(option => option.value === firstInterestCrop)) {
+                    cropSelect.value = firstInterestCrop;
+                }
+                // aiCropSelect (AI 예측 탭)
+                if ([...aiCropSelect.options].some(option => option.value === firstInterestCrop)) {
+                    aiCropSelect.value = firstInterestCrop;
+                }
+            }
+
             // 초기 필터 데이터 로딩
             await fetchVarieties();
             await fetchGrades();

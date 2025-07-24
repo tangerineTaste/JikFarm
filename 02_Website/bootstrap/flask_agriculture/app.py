@@ -594,7 +594,7 @@ def save_member_interest_crops():
         return jsonify({'error': 'Unauthorized'}), 401
     
     member_id = session['member_id']
-    selected_crop_ids = request.json.get('crop_ids', [])
+    selected_crop_ids = request.json.get('crop_ids', []) # type: ignore
 
     conn = get_connection()
     try:
@@ -610,6 +610,44 @@ def save_member_interest_crops():
                     cursor.execute(insert_sql, (member_id, crop_id))
             conn.commit()
             return jsonify({'message': 'Interest crops saved successfully'}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/update_profile', methods=['POST'])
+def update_profile():
+    if 'member_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    member_id = session['member_id']
+    data = request.get_json()
+    nickname = data.get('nickname')
+    name = data.get('name')
+
+    if not nickname or not name:
+        return jsonify({'error': '닉네임과 이름은 필수입니다.'}), 400
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            # 닉네임 중복 확인 (자기 자신 제외)
+            sql = "SELECT member_id FROM members WHERE nickname = %s AND member_id != %s"
+            cursor.execute(sql, (nickname, member_id))
+            if cursor.fetchone():
+                return jsonify({'error': '이미 사용 중인 닉네임입니다.'}), 400
+
+            # 정보 업데이트
+            sql = "UPDATE members SET nickname = %s, name = %s, updated_at = NOW() WHERE member_id = %s"
+            cursor.execute(sql, (nickname, name, member_id))
+            conn.commit()
+
+            # 세션 정보 업데이트
+            session['nickname'] = nickname
+            session['name'] = name
+
+            return jsonify({'message': 'Profile updated successfully', 'nickname': nickname, 'name': name}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({'error': str(e)}), 500

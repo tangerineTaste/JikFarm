@@ -1,5 +1,3 @@
--- 추출할 테이블/뷰 리스트 (파티션 포함)
-
 -- ==============================
 -- fact_trade
 -- ==============================
@@ -11,22 +9,12 @@ CREATE TABLE `fact_trade` (
   `grade_label` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `unit_tot_qty` float DEFAULT NULL,
   `totprc` float DEFAULT NULL,
-  `year_part` int GENERATED ALWAYS AS (cast(year(`trd_clcln_ymd`) as unsigned)) STORED NOT NULL,
-  PRIMARY KEY (`year_part`,`trd_clcln_ymd`,`crop_full_code`,`j_sanji_cd`),
-  KEY `idx_itemcode_date` (`item_code`,`trd_clcln_ymd`),
-  KEY `idx_itemcode_crop_grade_date` (`item_code`,`crop_full_code`,`grade_label`,`trd_clcln_ymd`),
-  KEY `idx_j_sanji_cd_date` (`j_sanji_cd`,`trd_clcln_ymd`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
-/*!50100 PARTITION BY RANGE (`year_part`)
-(PARTITION p2018 VALUES LESS THAN (2019) ENGINE = InnoDB,
- PARTITION p2019 VALUES LESS THAN (2020) ENGINE = InnoDB,
- PARTITION p2020 VALUES LESS THAN (2021) ENGINE = InnoDB,
- PARTITION p2021 VALUES LESS THAN (2022) ENGINE = InnoDB,
- PARTITION p2022 VALUES LESS THAN (2023) ENGINE = InnoDB,
- PARTITION p2023 VALUES LESS THAN (2024) ENGINE = InnoDB,
- PARTITION p2024 VALUES LESS THAN (2025) ENGINE = InnoDB,
- PARTITION p2025 VALUES LESS THAN (2026) ENGINE = InnoDB,
- PARTITION pMAX VALUES LESS THAN MAXVALUE ENGINE = InnoDB) */;
+  PRIMARY KEY (`trd_clcln_ymd`,`crop_full_code`,`j_sanji_cd`),
+  KEY `idx_trd_clcln_ymd` (`trd_clcln_ymd`),
+  KEY `idx_fact_trade_date` (`trd_clcln_ymd`),
+  KEY `idx_crop_date` (`crop_full_code`,`trd_clcln_ymd`),
+  KEY `idx_j_sanji_cd` (`j_sanji_cd`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ==============================
@@ -40,24 +28,11 @@ CREATE TABLE `fact_trade_weekly` (
   `grade_label` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `unit_tot_qty` float DEFAULT NULL,
   `avg_prc` float DEFAULT NULL,
-  `year_part` int NOT NULL,
-  `totprc` float DEFAULT NULL COMMENT '전체거래액(원)',
-  PRIMARY KEY (`weekno`,`crop_full_code`,`j_sanji_cd`,`year_part`),
-  KEY `idx_itemcode_weekno` (`item_code`,`weekno`),
-  KEY `idx_cropfullcode_weekno_grade` (`crop_full_code`,`weekno`,`grade_label`),
-  KEY `idx_itemcode_crop_grade_weekno` (`item_code`,`crop_full_code`,`grade_label`,`weekno`),
-  KEY `idx_j_sanji_cd_weekno` (`j_sanji_cd`,`weekno`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
-/*!50100 PARTITION BY RANGE (`year_part`)
-(PARTITION p2018 VALUES LESS THAN (2019) ENGINE = InnoDB,
- PARTITION p2019 VALUES LESS THAN (2020) ENGINE = InnoDB,
- PARTITION p2020 VALUES LESS THAN (2021) ENGINE = InnoDB,
- PARTITION p2021 VALUES LESS THAN (2022) ENGINE = InnoDB,
- PARTITION p2022 VALUES LESS THAN (2023) ENGINE = InnoDB,
- PARTITION p2023 VALUES LESS THAN (2024) ENGINE = InnoDB,
- PARTITION p2024 VALUES LESS THAN (2025) ENGINE = InnoDB,
- PARTITION p2025 VALUES LESS THAN (2026) ENGINE = InnoDB,
- PARTITION pMAX VALUES LESS THAN MAXVALUE ENGINE = InnoDB) */;
+  PRIMARY KEY (`weekno`,`crop_full_code`,`j_sanji_cd`),
+  KEY `crop_full_code` (`crop_full_code`),
+  KEY `idx_item_code_weekno` (`item_code`,`weekno`),
+  KEY `idx_j_sanji_cd` (`j_sanji_cd`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ==============================
@@ -167,6 +142,32 @@ CREATE TABLE `members` (
   UNIQUE KEY `nickname` (`nickname`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+-- ==============================
+-- v_active_interest_crops
+-- ==============================
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_interest_crops` AS select `interest_whitelist`.`crop_id` AS `crop_id`,`interest_whitelist`.`display_name` AS `display_name` from `interest_whitelist` where (`interest_whitelist`.`is_active` = true) order by `interest_whitelist`.`sort_order`;
+
+-- 제거 예정
+-- ==============================
+-- view_crop_trade_daily  
+-- ==============================
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `view_crop_trade_daily` 
+AS select `ft`.`trd_clcln_ymd` AS `trd_clcln_ymd`,`mcv`.`item_code` AS `item_code`,`mcv`.`gds_mclsf_nm` AS `gds_mclsf_nm`,`ft`.`crop_full_code` AS `crop_full_code`,`mcv`.`gds_sclsf_nm` AS `gds_sclsf_nm`,`ft`.`grade_label` AS `grd_cd`,`ft`.`grade_label` AS `grd_nm`,`ft`.`j_sanji_cd` AS `j_sanji_cd`,`mrs`.`j_sanji_nm` AS `j_sanji_nm`,`ft`.`unit_tot_qty` AS `unit_tot_qty`,(case when (`ft`.`unit_tot_qty` > 0) then (`ft`.`totprc` / `ft`.`unit_tot_qty`) else 0 end) AS `avg_price` from ((`fact_trade` `ft` join `master_crop_variety` `mcv` on((`ft`.`crop_full_code` = `mcv`.`crop_full_code`))) left join `map_region_weather_station` `mrs` on((`ft`.`j_sanji_cd` = `mrs`.`j_sanji_cd`)));
+
+
+-- ==============================
+-- vw_crop_item_name
+-- ==============================
+CREATE ALGORITHM=UNDEFINED DEFINER=`jikfarm1`@`%` SQL SECURITY DEFINER VIEW `vw_crop_item_name` AS select distinct `master_crop_variety`.`item_code` AS `item_code`,`master_crop_variety`.`gds_mclsf_nm` AS `gds_mclsf_nm` from `master_crop_variety`;
+
+
+-- ==============================
+-- vw_map_region_sanji
+-- ==============================
+CREATE ALGORITHM=UNDEFINED DEFINER=`jikfarm1`@`%` SQL SECURITY DEFINER VIEW `vw_map_region_sanji` AS select `map_region_weather_station`.`j_sanji_cd` AS `j_sanji_cd`,max(`map_region_weather_station`.`j_sanji_nm`) AS `j_sanji_nm` from `map_region_weather_station` group by `map_region_weather_station`.`j_sanji_cd`;
+
+
 -- ==============================
 -- weather_daily
 -- ==============================
@@ -182,20 +183,14 @@ CREATE TABLE `weather_daily` (
   PRIMARY KEY (`TM`,`STN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
 -- ==============================
--- v_active_interest_crops
+-- predict_price
 -- ==============================
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_interest_crops` AS select `interest_whitelist`.`crop_id` AS `crop_id`,`interest_whitelist`.`display_name` AS `display_name` from `interest_whitelist` where (`interest_whitelist`.`is_active` = true) order by `interest_whitelist`.`sort_order`;
-
-
--- ==============================
--- vw_crop_item_name
--- ==============================
-CREATE ALGORITHM=UNDEFINED DEFINER=`jikfarm1`@`%` SQL SECURITY DEFINER VIEW `vw_crop_item_name` AS select distinct `master_crop_variety`.`item_code` AS `item_code`,`master_crop_variety`.`gds_mclsf_nm` AS `gds_mclsf_nm` from `master_crop_variety`;
-
-
--- ==============================
--- vw_map_region_sanji
--- ==============================
-CREATE ALGORITHM=UNDEFINED DEFINER=`jikfarm1`@`%` SQL SECURITY DEFINER VIEW `vw_map_region_sanji` AS select `map_region_weather_station`.`j_sanji_cd` AS `j_sanji_cd`,max(`map_region_weather_station`.`j_sanji_nm`) AS `j_sanji_nm` from `map_region_weather_station` group by `map_region_weather_station`.`j_sanji_cd`;
+CREATE TABLE predict_price (
+    weekno            VARCHAR(6)   NOT NULL COMMENT '거래주차',
+    item_code         VARCHAR(4)   NOT NULL COMMENT '품목코드',
+    current_avg_prc   FLOAT        COMMENT '현재평균단가(원)',
+    last_year_avg_prc FLOAT        COMMENT '전년평균단가(원)',
+    predict_avg_prc   FLOAT        COMMENT '예측평균단가(원)',
+    PRIMARY KEY (weekno, item_code)
+) COMMENT='가격 예측 테이블';

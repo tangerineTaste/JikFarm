@@ -335,13 +335,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Define the full date range for labels (historical + prediction)
         const today = new Date();
         const historicalStartDate = new Date();
-        historicalStartDate.setDate(today.getDate() - 7); // Past 7 days for historical data
+        historicalStartDate.setDate(today.getDate()); // Past 7 days for historical data
 
         const allLabels = [];
         const dateToLabelMap = new Map(); // To easily map fetched data to labels
 
         // Generate labels for historical period
-        for (let d = new Date(historicalStartDate); d <= today; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(historicalStartDate); d <= today-1; d.setDate(d.getDate() + 1)) {
             const label = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
             allLabels.push(label);
             dateToLabelMap.set(d.toISOString().slice(0, 10), label);

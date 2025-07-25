@@ -1,0 +1,409 @@
+from flask import Blueprint, request, jsonify
+from db_connection import get_connection
+from datetime import datetime, timedelta
+
+api_bp = Blueprint('api', __name__)
+
+def to_date_str(row, key):
+    if row.get(key) and not isinstance(row[key], str):
+        row[key] = row[key].strftime('%Y-%m-%d')
+
+@api_bp.route('/latest_weeks', methods=['GET'])
+def get_latest_weeks():
+    conn = get_connection()
+    query = """
+        SELECT DISTINCT weekno FROM fact_trade_weekly
+        ORDER BY weekno DESC LIMIT 14
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(query)
+        weeks = [row['weekno'] for row in cursor.fetchall()] # type: ignore
+    conn.close()
+
+    if not weeks:
+        return jsonify({'start_week': '', 'end_week': ''})
+
+    return jsonify({'start_week': weeks[-1], 'end_week': weeks[0]})
+
+
+@api_bp.route('/weekly_trade', methods=['GET'])
+def get_weekly_trade():
+    item_code = request.args.get('item_code')
+    crop_full_code = request.args.get('crop_full_code')
+    grade = request.args.get('grade')
+    sanji_code = request.args.get('sanji_cd')
+    start_week = request.args.get('start_week')
+    end_week = request.args.get('end_week')
+    if not item_code:
+        return jsonify({'error': 'item_code is required'}), 400
+
+    # WHERE
+    where_clause = "LEFT(wt.crop_full_code, 4) = %s"
+    params = [item_code]
+    if crop_full_code:
+        where_clause += " AND wt.crop_full_code = %s"
+        params.append(crop_full_code)
+    if grade:
+        where_clause += " AND wt.grade_label = %s"
+        params.append(grade)
+    if sanji_code:
+        where_clause += " AND wt.j_sanji_cd = %s"
+        params.append(sanji_code)
+    if start_week:
+        where_clause += " AND wt.weekno >= %s"
+        params.append(start_week)
+    if end_week:
+        where_clause += " AND wt.weekno <= %s"
+        params.append(end_week)
+
+    # SELECT & GROUP BY
+    group_by = ['wt.weekno', 'LEFT(wt.crop_full_code, 4)']
+    select_parts = [
+        'wt.weekno',
+        'LEFT(wt.crop_full_code, 4) AS item_code',
+        'MAX(mcv.gds_mclsf_nm) AS gds_mclsf_nm'
+    ]
+
+
+
+    # crop_full_code(품종) 선택 시만 추가
+    if crop_full_code:
+        group_by.append('wt.crop_full_code')
+        group_by.append('mcv.gds_sclsf_nm')
+        select_parts.append('wt.crop_full_code')
+        select_parts.append('mcv.gds_sclsf_nm')
+    else:
+        select_parts.append("'' AS gds_sclsf_nm")
+
+    # grade 선택시만 추가
+    if grade:
+        group_by.append('wt.grade_label')
+        select_parts.append('wt.grade_label AS grd_cd')
+        select_parts.append('wt.grade_label AS grd_nm')
+
+    # sanji 선택시만 추가
+    if sanji_code:
+        group_by.append('wt.j_sanji_cd')
+        select_parts.append('wt.j_sanji_cd')
+        select_parts.append('MAX(mrs.j_sanji_nm) AS j_sanji_nm')
+
+    # 집계 컬럼
+    select_parts.append('ROUND(SUM(wt.unit_tot_qty), 0) AS unit_tot_qty')
+    select_parts.append('ROUND(AVG(wt.avg_prc), 0) AS avg_price')
+
+    select_sql = ',\n    '.join(select_parts)
+    group_by_sql = ', '.join(group_by)
+
+    query = f"""
+        SELECT
+            {select_sql}
+        FROM fact_trade_weekly wt
+        JOIN master_crop_variety mcv ON wt.crop_full_code = mcv.crop_full_code
+        LEFT JOIN (
+            SELECT DISTINCT j_sanji_cd, j_sanji_nm
+            FROM map_region_weather_station
+        ) mrs ON wt.j_sanji_cd = mrs.j_sanji_cd
+        WHERE {where_clause}
+        GROUP BY {group_by_sql}
+        ORDER BY wt.weekno
+    """
+
+    # 실행 및 반환
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+    conn.close()
+    print('--------------------')
+    print('실행 쿼리:')
+    print(query)
+    print('파라미터:', params)
+    print('--------------------')
+    return jsonify(rows)
+
+@api_bp.route('/daily_trade', methods=['GET'])
+def get_daily_trade():
+    item_code = request.args.get('item_code')
+    crop_full_code = request.args.get('crop_full_code')
+    grade = request.args.get('grade')
+    sanji_code = request.args.get('sanji_cd')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if not item_code:
+        return jsonify({'error': 'item_code is required'}), 400
+
+    # WHERE
+    where_clause = "ft.item_code = %s"
+    params = [item_code]
+
+    if crop_full_code:
+        where_clause += " AND ft.crop_full_code = %s"
+        params.append(crop_full_code)
+    if grade:
+        where_clause += " AND ft.grade_label = %s"
+        params.append(grade)
+    if sanji_code:
+        where_clause += " AND ft.j_sanji_cd = %s"
+        params.append(sanji_code)
+    if start_date:
+        where_clause += " AND ft.trd_clcln_ymd >= %s"
+        params.append(start_date)
+    if end_date:
+        where_clause += " AND ft.trd_clcln_ymd <= %s"
+        params.append(end_date)
+
+    # SELECT & GROUP BY
+    group_by = ['ft.trd_clcln_ymd', 'ft.item_code']
+    select_parts = [
+        'ft.trd_clcln_ymd',
+        'ft.item_code AS item_code'
+    ]
+
+    if crop_full_code:
+        join_crop = "JOIN master_crop_variety mcv ON ft.crop_full_code = mcv.crop_full_code"
+        group_by.append('ft.crop_full_code')
+        group_by.append('mcv.gds_sclsf_nm')
+        select_parts.append('ft.crop_full_code')
+        select_parts.append('MAX(mcv.gds_mclsf_nm) AS gds_mclsf_nm')
+        select_parts.append('mcv.gds_sclsf_nm')
+    else:
+        join_crop = "JOIN vw_crop_item_name mcv ON ft.item_code = mcv.item_code"
+        group_by.append('mcv.gds_mclsf_nm')
+        select_parts.append('mcv.gds_mclsf_nm')
+        select_parts.append("'' AS gds_sclsf_nm")
+
+    if grade:
+        group_by.append('ft.grade_label')
+        select_parts.append('ft.grade_label AS grd_nm')
+
+    if sanji_code:
+        group_by.append('ft.j_sanji_cd')
+        select_parts.append('ft.j_sanji_cd')
+        select_parts.append('MAX(mrs.j_sanji_nm) AS j_sanji_nm')
+
+    # 집계 컬럼 (뷰와 동일 로직)
+    select_parts.append('ROUND(SUM(ft.unit_tot_qty), 0) AS unit_tot_qty')
+    select_parts.append('ROUND(SUM(ft.totprc) / NULLIF(SUM(ft.unit_tot_qty),0), 0) AS avg_price')
+
+    select_sql = ',\n    '.join(select_parts)
+    group_by_sql = ', '.join(group_by)
+
+    query = f"""
+        SELECT
+            {select_sql}
+        FROM fact_trade ft
+        {join_crop}
+        LEFT JOIN (
+            SELECT DISTINCT j_sanji_cd, j_sanji_nm
+            FROM map_region_weather_station
+        ) mrs ON ft.j_sanji_cd = mrs.j_sanji_cd
+        WHERE {where_clause}
+        GROUP BY {group_by_sql}
+        ORDER BY ft.trd_clcln_ymd
+    """
+
+    # 실행 및 반환
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+    conn.close()
+
+    # 날짜컬럼 yyyy-MM-dd 변환
+    for row in rows:
+        to_date_str(row, 'trd_clcln_ymd')
+
+    return jsonify(rows)
+
+@api_bp.route('/latest_dates', methods=['GET'])
+def get_latest_dates():
+    conn = get_connection()
+    query = "SELECT MAX(trd_clcln_ymd) as max_date FROM fact_trade"
+    with conn.cursor() as cursor:
+        cursor.execute(query)
+        result = cursor.fetchone()
+    conn.close()
+
+    if not result or not result['max_date']: # type: ignore
+        end_dt = datetime.now()
+    else:
+        end_dt = result['max_date'] # type: ignore
+
+    start_dt = end_dt - timedelta(days=30)
+
+    return jsonify({
+        'start_date': start_dt.strftime('%Y-%m-%d'),
+        'end_date': end_dt.strftime('%Y-%m-%d')
+    })
+
+@api_bp.route('/items', methods=['GET'])
+def get_items():
+    conn = get_connection()
+    query = """
+        SELECT DISTINCT item_code, gds_mclsf_nm
+        FROM master_crop_variety
+        ORDER BY item_code
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+    conn.close()
+    return jsonify(rows)
+
+@api_bp.route('/varieties', methods=['GET'])
+def get_varieties():
+    item_code = request.args.get('item_code')
+    if not item_code:
+        return jsonify({'error': 'item_code is required'}), 400
+
+    conn = get_connection()
+    query = """
+        SELECT crop_full_code, gds_sclsf_nm
+        FROM master_crop_variety
+        WHERE item_code = %s
+        ORDER BY crop_full_code
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(query, (item_code,))
+        rows = cursor.fetchall()
+    conn.close()
+    return jsonify(rows)
+
+@api_bp.route('/grades', methods=['GET'])
+def get_grades():
+    item_code = request.args.get('item_code')
+    crop_full_code = request.args.get('crop_full_code')
+    start_week = request.args.get('start_week')
+    end_week = request.args.get('end_week')
+
+    if not item_code or not start_week or not end_week:
+        return jsonify({'error': 'item_code, start_week, and end_week are required'}), 400
+
+    is_daily = len(start_week) == 8 and len(end_week) == 8
+    table = 'fact_trade' if is_daily else 'fact_trade_weekly'
+    date_col = 'trd_clcln_ymd' if is_daily else 'weekno'
+
+    where = [f"item_code = %s", f"{date_col} >= %s", f"{date_col} <= %s"]
+    params = [item_code, start_week, end_week]
+
+    if crop_full_code:
+        where.append("crop_full_code = %s")
+        params.append(crop_full_code)
+
+    where_clause = " AND ".join(where)
+
+    query = f"""
+        SELECT DISTINCT grade_label
+        FROM {table}
+        WHERE {where_clause} AND grade_label IS NOT NULL
+        ORDER BY grade_label
+    """
+
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(query, tuple(params))
+        rows = [row['grade_label'] for row in cursor.fetchall()] # type: ignore
+    conn.close()
+    return jsonify(rows)
+
+
+@api_bp.route('/sanjis', methods=['GET'])
+def get_sanjis():
+    item_code = request.args.get('item_code')
+    crop_full_code = request.args.get('crop_full_code')
+    grade = request.args.get('grade')
+    start_week = request.args.get('start_week')
+    end_week = request.args.get('end_week')
+
+    if not item_code or not start_week or not end_week:
+        return jsonify({'error': 'item_code, start_week, end_week are required'}), 400
+
+    is_daily = (len(start_week) == 8 and len(end_week) == 8)
+    if is_daily:
+        table = 'fact_trade'
+        date_col = 'trd_clcln_ymd'
+        grade_col = 'grade_label'
+    else:
+        table = 'fact_trade_weekly'
+        date_col = 'weekno'
+        grade_col = 'grade_label'
+
+    where = [f"item_code = %s", f"{date_col} >= %s", f"{date_col} <= %s"]
+    params = [item_code, start_week, end_week]
+
+    if crop_full_code:
+        where.append("crop_full_code = %s")
+        params.append(crop_full_code)
+    if grade:
+        where.append(f"{grade_col} = %s")
+        params.append(grade)
+    where_clause = " AND ".join(where)
+
+    query = f"""
+        SELECT t.j_sanji_cd, s.j_sanji_nm
+        FROM (
+            SELECT DISTINCT j_sanji_cd
+            FROM {table}
+            WHERE {where_clause}
+                AND j_sanji_cd IS NOT NULL
+        ) t
+        INNER JOIN vw_map_region_sanji s
+            ON s.j_sanji_cd = t.j_sanji_cd
+        ORDER BY t.j_sanji_cd
+    """
+
+    conn = get_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+    conn.close()
+    return jsonify(rows)
+
+@api_bp.route('/ai_historical_data', methods=['GET'])
+def get_ai_historical_data():
+    item_code = request.args.get('item_code')
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    print(item_code,start_date_str, end_date_str)
+    
+    if not item_code or not start_date_str or not end_date_str:
+        return jsonify({'error': 'item_code, start_date, and end_date are required'}), 400
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                SELECT
+                    trd_clcln_ymd,
+                    ROUND(SUM(totprc) / NULLIF(SUM(unit_tot_qty), 0), 0) AS avg_price,
+                    ROUND(SUM(unit_tot_qty), 0) AS unit_tot_qty
+                FROM fact_trade
+                WHERE item_code = %s
+                  AND trd_clcln_ymd BETWEEN %s AND %s
+                GROUP BY trd_clcln_ymd
+                ORDER BY trd_clcln_ymd
+            """
+            cursor.execute(query, (item_code, start_date_str, end_date_str))
+            rows = cursor.fetchall()
+            
+            # 날짜컬럼 yyyy-MM-dd 변환
+            for row in rows:
+                to_date_str(row, 'trd_clcln_ymd')
+
+            return jsonify(rows)
+    finally:
+        conn.close()
+
+@api_bp.route('/interest_crops', methods=['GET'])
+def get_interest_crops():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = "SELECT crop_id, display_name FROM interest_whitelist WHERE is_active = TRUE ORDER BY sort_order"
+            cursor.execute(query)
+            crops = cursor.fetchall()
+            return jsonify(crops)
+    finally:
+        conn.close()

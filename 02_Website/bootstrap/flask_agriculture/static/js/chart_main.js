@@ -326,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // AI예측 로직
     async function renderAiPredictionChart() {
         const itemCode = aiCropSelect.value;
+        const termWeeks = parseInt(aiTermSelect.value, 10); // 1, 2, or 4
 
         if (!itemCode) {
             alert('품목을 선택해주세요.');
@@ -334,15 +335,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const response = await fetch(`/api/predict_price?item_code=${itemCode}`);
-            const data = await response.json();
+            const allData = await response.json(); // API에서 모든 데이터 가져오기
 
-            const labels = data.map(row => row.weekno);
-            const historicalPrice = data.map(row => row.current_avg_prc);
-            const predictedPrice = data.map(row => row.predict_avg_prc);
+            // 과거 데이터와 예측 데이터 분리
+            const historicalDataPoints = [];
+            const predictedDataPoints = [];
 
-            const chartTitle = `${aiCropSelect.options[aiCropSelect.selectedIndex].text} AI 예측 결과`;
-            drawAiChart(labels, historicalPrice, predictedPrice, [], aiCropSelect.options[aiCropSelect.selectedIndex].text, chartTitle);
-            updateAiDataTable(labels, historicalPrice, predictedPrice);
+            allData.forEach(row => {
+                // current_avg_prc가 존재하면 과거 데이터로 간주
+                if (row.current_avg_prc !== null && row.current_avg_prc !== 0) {
+                    historicalDataPoints.push(row);
+                } 
+                // predict_avg_prc가 존재하면 예측 데이터로 간주
+                else if (row.predict_avg_prc !== null && row.predict_avg_prc !== 0) {
+                    predictedDataPoints.push(row);
+                }
+            });
+
+            // 과거 4주 데이터 가져오기
+            const recentHistorical = historicalDataPoints.slice(-4);
+
+            // 선택된 기간만큼의 미래 예측 데이터 가져오기
+            const futurePredictions = predictedDataPoints.slice(0, termWeeks);
+
+            // 차트 및 테이블을 위한 데이터 결합
+            const combinedData = [...recentHistorical, ...futurePredictions];
+
+            const labels = combinedData.map(row => row.weekno);
+
+            // 차트 데이터셋을 위한 배열 초기화
+            const chartHistoricalPrices = [];
+            const chartLastYearPrices = [];
+            const chartPredictedPrices = [];
+
+            // 과거 데이터 채우기
+            recentHistorical.forEach(row => {
+                chartHistoricalPrices.push(row.current_avg_prc);
+                chartLastYearPrices.push(row.last_year_avg_prc);
+                chartPredictedPrices.push(null); // 과거 주차에는 예측값 없음
+            });
+
+            // 과거 데이터와 예측 데이터 연결 (예측 라인이 과거 마지막 지점에서 시작하도록)
+            if (recentHistorical.length > 0 && futurePredictions.length > 0) {
+                chartPredictedPrices[recentHistorical.length - 1] = recentHistorical[recentHistorical.length - 1].current_avg_prc;
+            }
+
+            // 예측 데이터 채우기
+            futurePredictions.forEach(row => {
+                chartHistoricalPrices.push(null); // 미래 주차에는 과거값 없음
+                chartLastYearPrices.push(row.last_year_avg_prc); // 미래 주차에도 전년값 있음
+                chartPredictedPrices.push(row.predict_avg_prc);
+            });
+
+            const chartTitle = `${aiCropSelect.options[aiCropSelect.selectedIndex].text} AI 예측 결과 (과거 4주 + 미래 ${termWeeks}주)`;
+            drawAiChart(labels, chartHistoricalPrices, chartLastYearPrices, chartPredictedPrices, aiCropSelect.options[aiCropSelect.selectedIndex].text, chartTitle);
+            updateAiDataTable(labels, chartHistoricalPrices, chartLastYearPrices, chartPredictedPrices); // 테이블도 동일한 데이터 사용
 
         } catch (error) {
             console.error('AI 예측 데이터 조회 오류:', error);
@@ -350,50 +397,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateAiDataTable(labels, historicalPrice, predictedPrice) {
+    function updateAiDataTable(labels, historicalPrice, lastYearPrice, predictedPrice) {
         const tableBody = document.getElementById('price-data-table');
         tableBody.innerHTML = '';
         labels.forEach((label, index) => {
             const row = document.createElement('tr');
             const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : 'N/A';
             const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : 'N/A';
-            row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td>`;
-            tableBody.appendChild(row);
-        });
-    }
-
-    function updateAiDataTable(labels, historicalPrice, predictedPrice) {
-        const tableBody = document.getElementById('price-data-table');
-        tableBody.innerHTML = '';
-        labels.forEach((label, index) => {
-            const row = document.createElement('tr');
-            const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : 'N/A';
-            const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : 'N/A';
-            row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td>`;
-            tableBody.appendChild(row);
-        });
-    }
-
-    function updateAiDataTable(labels, historicalPrice, predictedPrice) {
-        const tableBody = document.getElementById('price-data-table');
-        tableBody.innerHTML = '';
-        labels.forEach((label, index) => {
-            const row = document.createElement('tr');
-            const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : 'N/A';
-            const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : 'N/A';
-            row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td>`;
-            tableBody.appendChild(row);
-        });
-    }
-
-    function updateAiDataTable(labels, historicalPrice, predictedPrice) {
-        const tableBody = document.getElementById('price-data-table');
-        tableBody.innerHTML = '';
-        labels.forEach((label, index) => {
-            const row = document.createElement('tr');
-            const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : 'N/A';
-            const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : 'N/A';
-            row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td>`;
+            const lastYear = lastYearPrice[index] ? new Intl.NumberFormat('ko-KR').format(lastYearPrice[index].toFixed(0)) : 'N/A';
+            row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td><td>${lastYear}</td>`;
             tableBody.appendChild(row);
         });
     }
@@ -465,14 +477,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function drawAiChart(labels, historicalData, predictionData, title, chartTitle) {
+    function drawAiChart(labels, historicalData, lastYearData, predictionData, title, chartTitle) {
         if (priceChart) priceChart.destroy();
         priceChart = new Chart(priceCtx, {
             data: {
                 labels: labels,
                 datasets: [
                     { type: 'line', label: `${title} 과거 가격`, data: historicalData, yAxisID: 'y', borderColor: '#28a745', fill: false, tension: 0.4 },
-                    { type: 'line', label: `${title} 예측 가격`, data: predictionData, yAxisID: 'y', borderColor: '#8A2BE2', borderDash: [5, 5], fill: false, tension: 0.4 },
+                    { type: 'line', label: `${title} 전년 가격`, data: lastYearData, yAxisID: 'y', borderColor: '#a9a9a9', borderDash: [5, 5], fill: false, tension: 0.4 },
+                    { type: 'line', label: `${title} 예측 가격`, data: predictionData, yAxisID: 'y', borderColor: '#8A2BE2', fill: false, tension: 0.4 },
                 ]
             },
             options: getChartOptions(chartTitle)

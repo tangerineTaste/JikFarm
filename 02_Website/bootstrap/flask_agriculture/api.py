@@ -407,3 +407,31 @@ def get_interest_crops():
             return jsonify(crops)
     finally:
         conn.close()
+
+@api_bp.route('/predict_price', methods=['GET'])
+def get_predict_price():
+    item_code = request.args.get('item_code')
+    if not item_code:
+        return jsonify({'error': 'item_code is required'}), 400
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                SELECT 
+                    weekno, 
+                    item_code, 
+                    current_avg_prc, 
+                    last_year_avg_prc, 
+                    predict_avg_prc
+                FROM predict_price
+                WHERE item_code = %s
+                ORDER BY weekno
+            """
+            cursor.execute(query, (item_code,))
+            rows = cursor.fetchall()
+            return jsonify(rows)
+    finally:
+        conn.close()
+
+

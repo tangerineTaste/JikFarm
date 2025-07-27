@@ -56,17 +56,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 탭 전환 로직
     function switchTab(tab) {
+        const tableHeader = document.querySelector('.table thead tr');
         if (tab === 'trend') {
             tabTrend.classList.add('active');
             tabAi.classList.remove('active');
             trendSection.style.display = 'block';
             aiSection.style.display = 'none';
+            tableHeader.innerHTML = `
+                <th scope="col">기간</th>
+                <th scope="col">평균 단가 (원)</th>
+                <th scope="col">거래량</th>
+            `;
             renderTrendChart(); // 탭 전환 시 차트 다시 그리기
         } else {
             tabAi.classList.add('active');
             tabTrend.classList.remove('active');
             aiSection.style.display = 'block';
             trendSection.style.display = 'none';
+            tableHeader.innerHTML = `
+                <th scope="col">주차</th>
+                <th scope="col">현재 평균 단가 (원)</th>
+                <th scope="col">예측 평균 단가 (원)</th>
+                <th scope="col">전년 평균 단가 (원)</th>
+            `;
             renderAiPredictionChart(); // 탭 전환 시 차트 다시 그리기
         }
     }

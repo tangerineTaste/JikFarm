@@ -402,9 +402,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.innerHTML = '';
         labels.forEach((label, index) => {
             const row = document.createElement('tr');
-            const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : 'N/A';
-            const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : 'N/A';
-            const lastYear = lastYearPrice[index] ? new Intl.NumberFormat('ko-KR').format(lastYearPrice[index].toFixed(0)) : 'N/A';
+            const historical = historicalPrice[index] ? new Intl.NumberFormat('ko-KR').format(historicalPrice[index].toFixed(0)) : '';
+            const predicted = predictedPrice[index] ? new Intl.NumberFormat('ko-KR').format(predictedPrice[index].toFixed(0)) : '';
+            const lastYear = lastYearPrice[index] ? new Intl.NumberFormat('ko-KR').format(lastYearPrice[index].toFixed(0)) : '';
             row.innerHTML = `<td>${label}</td><td>${historical}</td><td>${predicted}</td><td>${lastYear}</td>`;
             tableBody.appendChild(row);
         });
@@ -497,8 +497,8 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.innerHTML = '';
         labels.forEach((label, index) => {
             const row = document.createElement('tr');
-            const price = priceData[index] ? new Intl.NumberFormat('ko-KR').format(priceData[index].toFixed(0)) : 'N/A';
-            const volume = volumeData[index] ? new Intl.NumberFormat('ko-KR').format(volumeData[index].toFixed(0)) : 'N/A';
+            const price = priceData[index] ? new Intl.NumberFormat('ko-KR').format(priceData[index].toFixed(0)) : '';
+            const volume = volumeData[index] ? new Intl.NumberFormat('ko-KR').format(volumeData[index].toFixed(0)) : '';
             row.innerHTML = `<td>${label}</td><td>${price}</td><td>${volume}</td>`;
             tableBody.appendChild(row);
         });

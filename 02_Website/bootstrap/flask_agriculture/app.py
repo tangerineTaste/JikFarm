@@ -12,6 +12,9 @@ load_dotenv()
 app = Flask(__name__)
 
 
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your_secret_key')
+
+
 app.register_blueprint(auth_bp)
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(views_bp)

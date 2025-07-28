@@ -5,6 +5,9 @@ import os
 
 auth_bp = Blueprint('auth', __name__)
 
+
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

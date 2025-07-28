@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabAi = document.getElementById('tab-ai');
     const trendSection = document.getElementById('trend-analysis-section');
     const aiSection = document.getElementById('ai-prediction-section');
+    const aiWarning = document.getElementById('ai-warning');
 
     // 트렌드 분석 elements
     const trendQueryBtn = document.getElementById('trend-query-btn');
@@ -57,11 +58,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // 탭 전환 로직
     function switchTab(tab) {
         const tableHeader = document.querySelector('.table thead tr');
+        const aiWarning = document.getElementById('ai-warning');
         if (tab === 'trend') {
             tabTrend.classList.add('active');
             tabAi.classList.remove('active');
             trendSection.style.display = 'block';
             aiSection.style.display = 'none';
+            aiWarning.style.display = 'none';
             tableHeader.innerHTML = `
                 <th scope="col">기간</th>
                 <th scope="col">평균 단가 (원)</th>
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tabTrend.classList.remove('active');
             aiSection.style.display = 'block';
             trendSection.style.display = 'none';
+            aiWarning.style.display = 'block';
             tableHeader.innerHTML = `
                 <th scope="col">주차</th>
                 <th scope="col">현재 평균 단가 (원)</th>
@@ -119,6 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if ([...aiCropSelect.options].some(option => option.value === firstInterestCrop)) {
                     aiCropSelect.value = firstInterestCrop;
                 }
+            }
+            else{
+                cropSelect.value = cropSelect.options[4].value;
             }
 
             // 초기 필터 데이터 로딩

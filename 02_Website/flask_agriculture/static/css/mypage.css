@@ -1,0 +1,122 @@
+/*--------------------------------------------------------------
+# MyPage Section
+--------------------------------------------------------------*/
+.mypage-section .user-info-card,
+.mypage-section .interest-crops-card {
+  background: var(--surface-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  border-radius: 8px;
+  height: 100%;
+}
+
+.mypage-section .section-title {
+  padding-bottom: 20px !important;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.mypage-section .section-title h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.mypage-section .section-title p {
+    font-size: 28px;
+    font-family: var(--heading-font);
+}
+
+
+.mypage-section .user-info-card h3 {
+  font-family: var(--heading-font);
+  color: var(--heading-color);
+  font-size: 28px;
+  margin-bottom: 25px;
+}
+
+.mypage-section .user-info-card .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.mypage-section .user-info-card .info-item strong {
+  width: 120px;
+  color: var(--heading-color);
+  font-weight: 600;
+}
+
+.mypage-section .user-info-card .info-item span {
+  color: var(--default-color);
+}
+
+/* Interest Crops Section */
+#interest-crops-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.interest-crop-item input[type="checkbox"] {
+  display: none; /* Hide original checkbox */
+}
+
+.interest-crop-item label {
+  display: inline-block;
+  padding: 8px 18px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  color: var(--default-color);
+}
+
+.interest-crop-item label:hover {
+    border-color: var(--accent-color);
+}
+
+
+.interest-crop-item input[type="checkbox"]:checked + label {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+  border-color: var(--accent-color);
+}
+
+/* Save Button */
+#save-interest-crops-btn {
+  font-family: var(--heading-font);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1px;
+  display: inline-block;
+  padding: 10px 35px;
+  border-radius: 50px;
+  transition: 0.5s;
+  margin-top: 15px;
+  color: var(--contrast-color);
+  background: var(--accent-color);
+  border: 0;
+}
+
+#edit-profile-btn{
+  font-family: var(--heading-font);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1px;
+  display: inline-block;
+  padding: 10px 35px;
+  border-radius: 50px;
+  transition: 0.5s;
+  margin-top: 15px;
+  color: var(--contrast-color);
+  background: var(--accent-color);
+  border: 0;
+}
+
+#save-interest-crops-btn:hover {
+  background: color-mix(in srgb, var(--accent-color), transparent 20%);
+}

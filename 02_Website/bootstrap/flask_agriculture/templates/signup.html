@@ -24,7 +24,7 @@
             </div>
             <h2>회원가입</h2>
             <p>직팜AI에 가입하고 다양한 서비스를 이용해보세요.</p>
-            <form id="signup-form" method="POST" action="{{ url_for('signup') }}">
+            <form id="signup-form" method="POST" action="{{ url_for('auth.signup') }}">
                     <div class="input-group">
                         <label for="login_id">이메일</label>
                         <input type="text" id="login_id" name="username" placeholder="사용하실 아이디를 입력하세요" required>

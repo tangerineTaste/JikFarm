@@ -80,10 +80,12 @@
                              
                             <label for="ai-term-select">예측 기간:</label>
                             <select id="ai-term-select">
-                                <option value="7">1주일</option>
-                                <option value="14">2주일</option>
-                                <option value="30">1개월</option>
+                                <option value="1">1주</option>
+                                <option value="2">2주</option>
+                                <option value="4">4주</option>
                             </select>
+                             
+                            
                         </div>
                         <button class="query-button" id="ai-predict-btn">예측하기</button>
                     </div>
@@ -99,9 +101,7 @@
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th scope="col">기간</th>
-                            <th scope="col">가격 (원)</th>
-                            <th scope="col">거래량</th>
+                            <!-- Headers will be dynamically inserted here by JavaScript -->
                         </tr>
                     </thead>
                     <tbody id="price-data-table">

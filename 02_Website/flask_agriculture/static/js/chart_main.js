@@ -432,7 +432,45 @@ document.addEventListener('DOMContentLoaded', function() {
     aiPredictBtn.addEventListener('click', renderAiPredictionChart);
 
     // 차트 그리기 함수
-    function getChartOptions(chartTitle) {
+    function getChartOptions(chartTitle, includeVolumeAxis = true) {
+        const scales = {
+            y: { // 주간 가격 차트의 주요 Y축
+                type: 'linear',
+                display: true,
+                position: 'left',
+                beginAtZero: false,
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('ko-KR').format(value) + ' 원';
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '가격 (원)'
+                }
+            }
+        };
+
+        if (includeVolumeAxis) {
+            scales.y1 = { // 주간 거래량 차트의 주요 Y축
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: {
+                    drawOnChartArea: false, // 주요 축의 그리드만 그리기
+                },
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('ko-KR').format(value);
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '거래량'
+                }
+            };
+        }
+
         return {
             responsive: true,
             maintainAspectRatio: false,
@@ -445,40 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     text: chartTitle
                 }
             },
-            scales: {
-                y: { // 주간 가격 차트의 주요 Y축
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: false,
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.NumberFormat('ko-KR').format(value) + ' 원';
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: '가격 (원)'
-                    }
-                },
-                y1: { // 주간 거래량 차트의 주요 Y축
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    grid: {
-                        drawOnChartArea: false, // 주요 축의 그리드만 그리기
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.NumberFormat('ko-KR').format(value);
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: '거래량'
-                    }
-                }
-            }
+            scales: scales
         };
     }
 
@@ -507,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     { type: 'line', label: `${title} 예측 가격`, data: predictionData, yAxisID: 'y', borderColor: '#8A2BE2', fill: false, tension: 0.4 },
                 ]
             },
-            options: getChartOptions(chartTitle)
+            options: getChartOptions(chartTitle, false) // AI 예측 차트에서는 거래량 축을 포함하지 않음
         });
     }
 

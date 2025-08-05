@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main">
+
+  <!-- Page Title -->
+  <div class="page-title dark-background" data-aos="fade" style="background-image: url('{{ url_for('static', filename='assets/img/page-title-bg.webp') }}');">
+    <div class="container position-relative">
+      <h1>팀원 소개</h1>
+      <p>Team</p>
+    </div>
+  </div><!-- End Page Title -->
+
+  <!-- Team Section -->
+  <section class="team section" id="team">
+    <div class="container">
+      <div class="row gy-4">
+
+        {% set team = [
+          {
+            'name': '박진성',
+            'role': 'Farmer',
+            'image': 'team-1.jpg',
+            'github': 'https://github.com/jsa3338/',
+            'desc': '기술 기반 농업을 실현하는 스마트 농부'
+          },
+          {
+            'name': '주용곤',
+            'role': 'Marketing',
+            'image': 'team-2.jpg',
+            'github': 'https://github.com/yongkoni/',
+            'desc': '데이터로 시장을 읽고 설득하는 마케터'
+          },
+          {
+            'name': '박동현',
+            'role': 'Content',
+            'image': 'team-3.jpg',
+            'github': 'https://github.com/onizuka-38/',
+            'desc': '이해하기 쉬운 농업 콘텐츠 제작자'
+          },
+          {
+            'name': '심재성',
+            'role': 'Accountant',
+            'image': 'team-4.jpg',
+            'github': 'https://github.com/tangerineTaste/',
+            'desc': '정확한 숫자로 신뢰를 쌓는 회계 전문가'
+          }
+        ] %}
+
+        {% for member in team %}
+        <div class="col-lg-3 col-md-6">
+          <div class="team-card-wrapper" data-aos="fade-up" data-aos-delay="{{ 100 + loop.index0 * 100 }}">
+            <div class="team-card">
+              <div class="member-img">
+                <img src="{{ url_for('static', filename='assets/img/team/' + member.image) }}" class="img-fluid" alt="{{ member.name }}">
+                <div class="social">
+                  <a href="{{ member.github }}" target="_blank"><i class="bi bi-github"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4>{{ member.name }}</h4>
+                <span>{{ member.role }}</span>
+                <p>{{ member.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </section><!-- /Team Section -->
+
+</main>
+{% endblock %}

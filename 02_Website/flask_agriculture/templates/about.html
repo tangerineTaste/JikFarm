@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main">
+
+  <!-- Page Title -->
+  <div class="page-title dark-background" data-aos="fade" style="background-image: url('{{ url_for('static', filename='assets/img/page-title-bg.webp') }}');">
+    <div class="container position-relative">
+      <h1>팀원 소개</h1>
+      <p>Team</p>
+    </div>
+  </div><!-- End Page Title -->
+
+  <!-- Team Section -->
+  <section class="team section" id="team">
+    <div class="container">
+      <div class="row gy-4">
+
+        {% set team = [
+          {
+            'name': '박진성',
+            'role': 'Project Manager',
+            'image': '박진성.jpg',
+            'github': 'https://github.com/jsa3338/',
+            'desc': '"의지가 역량을 이긴다"<br>MD, 마케터, 기획자에서 AI 개발까지<br>필드와 유저의 니즈를 더욱 정확하게<br>파악하는 AI 기획+개발 융합 인재'
+          },
+          {
+            'name': '주용곤',
+            'role': 'AI Developer',
+            'image': '주용곤.jpg',
+            'github': 'https://github.com/yongkoni/',
+            'desc': '"문제를 파악하고, 데이터로 해결하는 개발자"<br>Python과 빅데이터 기반 분석력<br>인내와 끈기로 문제를 해결하는<br>실전형 AI 모델 개발자'
+          },
+          {
+            'name': '박동현',
+            'role': 'AI Developer',
+            'image': '박동현.jpg',
+            'github': 'https://github.com/onizuka-38/',
+            'desc': '"호기심이 방향을, 꾸준함이 성장을"<br>C언어, 회로에서 Python과 데이터까지<br>하드웨어적 사고와 데이터 분석을<br>겸비한 문제 해결형 AI 개발 인재'
+          },
+          {
+            'name': '심재성',
+            'role': 'AI Developer',
+            'image': '심재성.jpg',
+            'github': 'https://github.com/tangerineTaste/',
+            'desc': '"현재 일에 충실하자"<br>한 우물만 파온 개발자의<br>컴퓨팅사고력으로 코드로 생각하고<br>결과로 증명하는 개발자'
+          }
+        ] %}
+
+        {% for member in team %}
+        <div class="col-lg-3 col-md-6">
+          <div class="team-card-wrapper" data-aos="fade-up" data-aos-delay="{{ 100 + loop.index0 * 100 }}">
+            <div class="team-card">
+              <div class="member-img">
+                <img src="{{ url_for('static', filename='assets/img/team/' + member.image) }}" class="img-fluid" alt="{{ member.name }}">
+                <div class="social">
+                  <a href="{{ member.github }}" target="_blank"><i class="bi bi-github"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4>{{ member.name }}</h4>
+                <span>{{ member.role }}</span>
+                <p>{{ member.desc | safe }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </section><!-- /Team Section -->
+
+</main>
+{% endblock %}

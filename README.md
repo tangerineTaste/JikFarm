@@ -3,12 +3,13 @@
 
 - 프로젝트 명 : JikFarm(직팜)
 - 인원 : 4명
+- 팀원 : 박진성, 주용곤, 박동현, 심재성
 - 기간 : 2025.07.07 ~ 2025.07.25
 - 언어 : Python 3.10.9
 - DBMS : MySQL 
 - Python Library : sklearn, tensorflow, pandas
 - micro Web Framework : flask
-- 프로젝트 소개 : 농산물 가격 예측 정보 제겅
+- 프로젝트 소개 : 머신러닝/딥러닝을 이용한 농산물 가격 예측 및 웹 대시보드 구현
 
 <div align=center> 
   <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white"> 

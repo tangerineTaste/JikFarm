@@ -21,9 +21,10 @@
   <img src="https://img.shields.io/badge/css-1572B6?style=for-the-badge&logo=css3&logoColor=white"> 
   <img src="https://img.shields.io/badge/jquery-0769AD?style=for-the-badge&logo=jquery&logoColor=white">
 </div>
-
 <br>
+
 # 프로젝트 결과보고서
+
 ![Image](https://github.com/user-attachments/assets/dcd8b22e-8d6b-4585-acb9-26b5ac8459f0)
 
 ![Image](https://github.com/user-attachments/assets/1a09a79c-9a1b-4d49-bc00-d208d60ae8cb)
